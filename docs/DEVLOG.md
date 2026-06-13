@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-06-13（README：Colima 登录自启）
+
+### Done
+
+- README「Docker」小节补充 **macOS + Colima** 与 **`brew services start colima`** 说明（与 `restart: unless-stopped` 的关系）  
+
+### Changed Files
+
+- `README.md`、`docs/DEVLOG.md`  
+
+---
+
 ## 2026-06-13（中英混排 G2P）
 
 ### Done

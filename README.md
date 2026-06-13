@@ -255,6 +255,19 @@ docker compose logs -f sonus
 - 音频缓存使用命名卷 **`sonus-cache`**（非 bind mount）。
 - 开发机仍推荐 **`uv run sonus serve`**（Apple Silicon 上通常比 Docker VM 更顺）。
 
+### macOS + Colima：登录后自动起 Docker（再带起 Sonus）
+
+`docker-compose.yml` 里 **`restart: unless-stopped`** 只会在 **Docker 引擎已在跑** 时把 Sonus 容器拉起来。若本机 Docker 指向 **Colima**（`docker context` 为 `colima`），推荐用 Homebrew 自带的登录自启（与 `brew info colima` 的说明一致）：
+
+```bash
+brew services start colima
+```
+
+- 效果：**当前用户登录后** launchd 会启动 Colima；等 VM 就绪后再访问 `http://127.0.0.1:8000/health`（首次可能多等几秒）。
+- 关闭自启：`brew services stop colima`（不会卸载镜像或删掉 compose 项目）。
+- 若 `brew services start colima` 后 `docker context` 不是 `colima`，可执行：`docker context use colima`。
+- 说明：这是 **登录会话** 级自启；未登录桌面会话时一般不会跑虚拟机（与常见 Mac 使用方式一致）。
+
 仅构建镜像、不用 Compose：
 
 ```bash
