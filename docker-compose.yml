@@ -1,0 +1,24 @@
+services:
+  sonus:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sonus:local
+    container_name: sonus
+    ports:
+      - "${SONUS_PUBLISH_PORT:-8000}:8000"
+    environment:
+      SONUS_HOST: "0.0.0.0"
+      SONUS_PORT: "8000"
+      SONUS_LOG_LEVEL: "${SONUS_LOG_LEVEL:-info}"
+      SONUS_CACHE_ENABLED: "${SONUS_CACHE_ENABLED:-true}"
+      SONUS_CACHE_DIR: "/app/.cache/sonus"
+      SONUS_MAX_CHUNK_CHARS: "${SONUS_MAX_CHUNK_CHARS:-280}"
+    volumes:
+      # Host models/ must contain Kokoro v1.0 + v1.1-zh files (see README).
+      - ./models:/app/models:ro
+      - sonus-cache:/app/.cache/sonus
+    restart: unless-stopped
+
+volumes:
+  sonus-cache:

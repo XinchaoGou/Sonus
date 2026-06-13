@@ -1,0 +1,29 @@
+# Git / editor
+.git
+.gitignore
+.cursor
+**/.DS_Store
+
+# Python
+.venv
+__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Local runtime (mount at run time)
+.env
+.cache
+models/*.onnx
+models/*.bin
+
+# Dev / docs (not needed in image)
+tests
+docs
+AGENTS.md
+
+# Agent / IDE
+agent-tools
+agent-transcripts
