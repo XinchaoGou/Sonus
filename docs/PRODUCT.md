@@ -8,7 +8,7 @@
 
 | 场景 | 说明 |
 |------|------|
-| MarginNote 4 论文朗读 | 选中文本 → Sonus → 播放设备 |
+| MarginNote 4 论文朗读 | 选中文本 → **Sonus Companion**（⌥Esc）或 HTTP → 播放 |
 | Hermes Agent | Agent 输出 → 语音播报 |
 | 飞书机器人 | 消息 → 生成音频 → 发群 |
 | Python / CLI / 其它 Agent | HTTP 或 `sonus tts` |

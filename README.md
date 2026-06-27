@@ -12,6 +12,8 @@
 | [docs/ROADMAP.md](docs/ROADMAP.md) | 进度与下一优先级 |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | 技术决策（轻量 ADR） |
 | [docs/DEVLOG.md](docs/DEVLOG.md) | 每次开发后的状态记录（**新条目写在文件顶部**） |
+| [SonusCompanion/README.md](SonusCompanion/README.md) | macOS 菜单栏 Companion 构建与用法 |
+| [docs/COMPANION.md](docs/COMPANION.md) | Companion 架构与 API 适配 |
 
 人类读者从本 README 入门即可；**让 Agent 改代码前**，请其先读 `AGENTS.md` 与上述 `docs/` 全文。
 

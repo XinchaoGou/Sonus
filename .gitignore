@@ -18,3 +18,8 @@ wheels/
 # Large Kokoro weights (download separately; see README)
 models/*.onnx
 models/*.bin
+
+# Xcode
+DerivedData/
+*.xcuserstate
+xcuserdata/

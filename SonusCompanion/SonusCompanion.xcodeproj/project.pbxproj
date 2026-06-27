@@ -1,0 +1,291 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* SonusCompanionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* SonusCompanionApp.swift */; };
+		A10000000000000000000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* AppState.swift */; };
+		A10000000000000000000003 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* MenuBarView.swift */; };
+		A10000000000000000000004 /* HotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* HotkeyManager.swift */; };
+		A10000000000000000000005 /* SelectedTextReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* SelectedTextReader.swift */; };
+		A10000000000000000000006 /* SonusClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* SonusClient.swift */; };
+		A10000000000000000000007 /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* AudioPlayer.swift */; };
+		A10000000000000000000008 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* SettingsView.swift */; };
+		A10000000000000000000009 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* Logger.swift */; };
+		A1000000000000000000000A /* PlaybackState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* PlaybackState.swift */; };
+		A1000000000000000000000B /* TTSRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000B /* TTSRequest.swift */; };
+		A1000000000000000000000C /* Voice.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000C /* Voice.swift */; };
+		A1000000000000000000000D /* SonusSystemVoiceInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000D /* SonusSystemVoiceInstaller.swift */; };
+		A1000000000000000000000E /* StreamingAudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000F /* StreamingAudioPlayer.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A20000000000000000000001 /* SonusCompanionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SonusCompanionApp.swift; sourceTree = "<group>"; };
+		A20000000000000000000002 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		A20000000000000000000003 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		A20000000000000000000004 /* HotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManager.swift; sourceTree = "<group>"; };
+		A20000000000000000000005 /* SelectedTextReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectedTextReader.swift; sourceTree = "<group>"; };
+		A20000000000000000000006 /* SonusClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SonusClient.swift; sourceTree = "<group>"; };
+		A20000000000000000000007 /* AudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
+		A20000000000000000000008 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A20000000000000000000009 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		A2000000000000000000000A /* PlaybackState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackState.swift; sourceTree = "<group>"; };
+		A2000000000000000000000B /* TTSRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSRequest.swift; sourceTree = "<group>"; };
+		A2000000000000000000000C /* Voice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Voice.swift; sourceTree = "<group>"; };
+		A2000000000000000000000D /* SonusSystemVoiceInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SonusSystemVoiceInstaller.swift; sourceTree = "<group>"; };
+		A2000000000000000000000F /* StreamingAudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingAudioPlayer.swift; sourceTree = "<group>"; };
+		A2000000000000000000000E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A30000000000000000000001 /* SonusCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SonusCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A40000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A50000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				A50000000000000000000002 /* SonusCompanion */,
+				A50000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A50000000000000000000002 /* SonusCompanion */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000001 /* SonusCompanionApp.swift */,
+				A20000000000000000000002 /* AppState.swift */,
+				A20000000000000000000003 /* MenuBarView.swift */,
+				A20000000000000000000004 /* HotkeyManager.swift */,
+				A20000000000000000000005 /* SelectedTextReader.swift */,
+				A20000000000000000000006 /* SonusClient.swift */,
+				A20000000000000000000007 /* AudioPlayer.swift */,
+				A20000000000000000000008 /* SettingsView.swift */,
+				A20000000000000000000009 /* Logger.swift */,
+				A2000000000000000000000F /* StreamingAudioPlayer.swift */,
+				A50000000000000000000004 /* Models */,
+				A50000000000000000000005 /* SystemVoice */,
+				A2000000000000000000000E /* Info.plist */,
+			);
+			path = SonusCompanion;
+			sourceTree = "<group>";
+		};
+		A50000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A30000000000000000000001 /* SonusCompanion.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A50000000000000000000004 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000000A /* PlaybackState.swift */,
+				A2000000000000000000000B /* TTSRequest.swift */,
+				A2000000000000000000000C /* Voice.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A50000000000000000000005 /* SystemVoice */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000000D /* SonusSystemVoiceInstaller.swift */,
+			);
+			path = SystemVoice;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A60000000000000000000001 /* SonusCompanion */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A80000000000000000000003 /* Build configuration list for PBXNativeTarget "SonusCompanion" */;
+			buildPhases = (
+				A70000000000000000000001 /* Sources */,
+				A40000000000000000000001 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SonusCompanion;
+			productName = SonusCompanion;
+			productReference = A30000000000000000000001 /* SonusCompanion.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A90000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					A60000000000000000000001 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+				};
+			};
+			buildConfigurationList = A80000000000000000000001 /* Build configuration list for PBXProject "SonusCompanion" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A50000000000000000000001;
+			productRefGroup = A50000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A60000000000000000000001 /* SonusCompanion */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A70000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000001 /* SonusCompanionApp.swift in Sources */,
+				A10000000000000000000002 /* AppState.swift in Sources */,
+				A10000000000000000000003 /* MenuBarView.swift in Sources */,
+				A10000000000000000000004 /* HotkeyManager.swift in Sources */,
+				A10000000000000000000005 /* SelectedTextReader.swift in Sources */,
+				A10000000000000000000006 /* SonusClient.swift in Sources */,
+				A10000000000000000000007 /* AudioPlayer.swift in Sources */,
+				A10000000000000000000008 /* SettingsView.swift in Sources */,
+				A10000000000000000000009 /* Logger.swift in Sources */,
+				A1000000000000000000000A /* PlaybackState.swift in Sources */,
+				A1000000000000000000000B /* TTSRequest.swift in Sources */,
+				A1000000000000000000000C /* Voice.swift in Sources */,
+				A1000000000000000000000D /* SonusSystemVoiceInstaller.swift in Sources */,
+				A1000000000000000000000E /* StreamingAudioPlayer.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AA0000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AA0000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		AA0000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SonusCompanion/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sonus.companion;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AA0000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SonusCompanion/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sonus.companion;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A80000000000000000000001 /* Build configuration list for PBXProject "SonusCompanion" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000001 /* Debug */,
+				AA0000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A80000000000000000000003 /* Build configuration list for PBXNativeTarget "SonusCompanion" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000003 /* Debug */,
+				AA0000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A90000000000000000000001 /* Project object */;
+}

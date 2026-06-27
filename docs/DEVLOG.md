@@ -4,7 +4,66 @@
 
 ---
 
-## 2026-06-13（README：Colima 登录自启）
+## 2026-06-27（Companion 流式播放）
+
+### Done
+
+- **`StreamingAudioPlayer`**：`AVAudioEngine` 播放 `/tts/stream` PCM chunk（24 kHz mono s16le）
+- **`SonusClient.synthesizeStream`**：URLSession 流式读取，8 KB 批次 yield
+- 缓存未命中走流式；**首包到达即播放**（日志 `stream ttfb_ms`）
+- 流结束后 PCM 封装 WAV 写入本地缓存（与 `/tts` 缓存 key 一致）
+- 缓存命中仍走 `AVAudioPlayer` 整文件播放
+- 流式播放支持 pause / resume / stop / 播放中改速
+- `xcodebuild` **BUILD SUCCEEDED**
+
+### Changed Files
+
+- `SonusCompanion/StreamingAudioPlayer.swift`（新建）
+- `SonusCompanion/SonusClient.swift`、`AppState.swift`、`Models/TTSRequest.swift`
+- `SonusCompanion/CHANGELOG.md`、`docs/ROADMAP.md`、`docs/COMPANION.md`、`docs/DEVLOG.md`
+
+### Current Status
+
+- 非流式 `POST /tts` 仍保留在 `SonusClient.synthesize`（备用），Companion 主路径已切流式
+
+### Next
+
+- 登录自启、System Voice
+
+---
+
+## 2026-06-27（macOS Sonus Companion MVP）
+
+### Done
+- 全局热键默认 **⌥Esc**（Carbon）；Settings 可录制修改
+- 选中文本：Accessibility `kAXSelectedTextAttribute` → 剪贴板 Cmd+C fallback（可关闭，恢复剪贴板）
+- HTTP 客户端对接现有 **`GET /health`、`GET /voices`、`POST /tts`**（默认 `http://127.0.0.1:8000`）
+- `AVAudioPlayer` 播放 + 本地 WAV 缓存（`~/Library/Caches/SonusCompanion/audio/`）
+- Settings：Server URL、Voice、Speed、热键、缓存、Accessibility 引导
+- 日志：`~/Library/Logs/SonusCompanion/sonus-companion.log`
+- Phase 2 stub：`SonusSystemVoiceInstaller` + [SYSTEM_VOICE_RESEARCH.md](SYSTEM_VOICE_RESEARCH.md)
+- `xcodebuild` Debug **BUILD SUCCEEDED**
+
+### Changed Files
+
+- `SonusCompanion/**`（新建 Xcode 工程与 Swift 源码）
+- `SonusCompanion/CHANGELOG.md`、`SonusCompanion/README.md`
+- `docs/COMPANION.md`、`docs/SYSTEM_VOICE_RESEARCH.md`（新建）
+- `docs/ROADMAP.md`、`docs/DEVLOG.md`
+
+### Current Status
+
+- Companion 与 Python 后端 API 对齐（端口 8000，路径 `/tts`）
+- Launch at Login、System Voice 安装：仅占位 UI
+- 播放中改 speed 仅影响下次播放（MVP 简化）
+
+### Next
+
+- 真机验收：MarginNote / Safari / Preview + Accessibility 权限
+- Companion 流式播放（`/tts/stream`）
+- System Voice Audio Unit Extension
+
+---
 
 ### Done
 
