@@ -36,6 +36,8 @@ unzip -l build/Sonus-macos.zip
 
 For daily use and auto-updates, install to **`/Applications/Sonus.app`**.
 
+Settings → **Updates** checks [GitHub Releases](https://github.com/XinchaoGou/Sonus/releases) for `Sonus-macos.zip`.
+
 ## GitHub Release
 
 Push a version tag to build and publish `Sonus-macos.zip` via GitHub Actions:

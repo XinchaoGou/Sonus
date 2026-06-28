@@ -4,28 +4,41 @@ All notable changes to Sonus Companion are documented here.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-06-28
+
 ### Added
 
-- **Release packaging**: `build_app.sh release` builds `Sonus.app`, ad-hoc signs, outputs `build/Sonus-macos.zip` for GitHub Releases
-- **GitHub Actions release**: push tag `v*` triggers `companion-release.yml` to upload `Sonus-macos.zip`
-- App rename: product **`Sonus.app`**, Bundle ID **`com.sonus.app`**; data paths under `~/Library/.../Sonus/`
+- **In-app updates**: GitHub Releases check, semi-automatic download/install from `/Applications/Sonus.app`
+- Updater modules: `UpdateConfig`, `AppVersion`, `GitHubReleaseClient`, `UpdateDownloader`, `UpdateInstaller`, `AppUpdateController`
+- Settings → **Updates**: auto-check toggle, Check Now, Install Update
+- `AppVersionTests` for semver comparison
+
+### Changed
+
+- Menu bar label **Sonus** (was Sonus Companion)
+
+## [0.2.0] - 2026-06-28
+
+### Added
+
+- **Release packaging**: `build_app.sh release` → `Sonus-macos.zip`; GitHub Actions on tag `v*`
+- App rename: **`Sonus.app`**, Bundle ID **`com.sonus.app`**
 
 ### Fixed
 
-- **Settings 窗口置前**：菜单栏点击 Settings 时激活应用并将设置窗口带到最前；设置 `moveToActiveSpace`，在当前桌面显示而非跳回首次打开的 Space
+- **Settings 窗口置前**：菜单栏点击 Settings 时激活应用并将设置窗口带到最前；设置 `moveToActiveSpace`
 
 ### Added
 
 - **Launch at Login** via `SMAppService.mainApp` (Settings toggle)
-- Pending approval hint + shortcut to System Settings → Login Items
-- **Text Rules**: TTS 前可配置正则/字面量替换；Paper / General Profile；Settings 管理 + Preview；Import/Export JSON；菜单栏 Profile 切换
-- Unit tests: `SonusCompanionTests`（`TextPreprocessor` / `TextRuleStore`）
+- **Text Rules**: Paper / General Profile；Settings 管理 + Preview；Import/Export JSON
+- Unit tests: `SonusCompanionTests`
 
 ### Removed
 
-- System Voice stub (`SonusSystemVoiceInstaller`) and Settings placeholder — out of product scope
+- System Voice stub — out of product scope
 
-## [0.2.0] - 2026-06-27
+## [0.2.0-streaming] - 2026-06-27
 
 ### Added
 

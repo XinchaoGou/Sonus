@@ -48,6 +48,7 @@ flowchart LR
 | `StreamingAudioPlayer` | 流式 PCM 播放（`AVAudioEngine`） |
 | `HotkeyManager` | Carbon 全局热键 |
 | `LaunchAtLoginManager` | `SMAppService.mainApp` 登录自启 |
+| `AppUpdateController` | GitHub Releases 检查、下载、半自动安装（`/Applications/Sonus.app`） |
 | `TextRuleStore` / `TextPreprocessor` | 文本规则持久化与 TTS 前 pipeline（见 [TEXT_RULES.md](TEXT_RULES.md)） |
 
 ## API 适配

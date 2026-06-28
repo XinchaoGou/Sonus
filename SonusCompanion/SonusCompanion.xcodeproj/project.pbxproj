@@ -25,8 +25,15 @@
 		A10000000000000000000012 /* TextPreprocessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000012 /* TextPreprocessor.swift */; };
 		A10000000000000000000013 /* TextRuleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000013 /* TextRuleStore.swift */; };
 		A10000000000000000000014 /* TextRulesSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000014 /* TextRulesSettingsView.swift */; };
+		A10000000000000000000015 /* UpdateConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000015 /* UpdateConfig.swift */; };
+		A10000000000000000000016 /* AppVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000016 /* AppVersion.swift */; };
+		A10000000000000000000017 /* GitHubReleaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000017 /* GitHubReleaseClient.swift */; };
+		A10000000000000000000018 /* UpdateDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* UpdateDownloader.swift */; };
+		A10000000000000000000019 /* UpdateInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000019 /* UpdateInstaller.swift */; };
+		A1000000000000000000001A /* AppUpdateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001A /* AppUpdateController.swift */; };
 		B10000000000000000000001 /* TextPreprocessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* TextPreprocessorTests.swift */; };
 		B10000000000000000000002 /* TextRuleStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* TextRuleStoreTests.swift */; };
+		B10000000000000000000003 /* AppVersionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000003 /* AppVersionTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,10 +55,17 @@
 		A20000000000000000000012 /* TextPreprocessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextPreprocessor.swift; sourceTree = "<group>"; };
 		A20000000000000000000013 /* TextRuleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRuleStore.swift; sourceTree = "<group>"; };
 		A20000000000000000000014 /* TextRulesSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRulesSettingsView.swift; sourceTree = "<group>"; };
+		A20000000000000000000015 /* UpdateConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateConfig.swift; sourceTree = "<group>"; };
+		A20000000000000000000016 /* AppVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppVersion.swift; sourceTree = "<group>"; };
+		A20000000000000000000017 /* GitHubReleaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubReleaseClient.swift; sourceTree = "<group>"; };
+		A20000000000000000000018 /* UpdateDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateDownloader.swift; sourceTree = "<group>"; };
+		A20000000000000000000019 /* UpdateInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstaller.swift; sourceTree = "<group>"; };
+		A2000000000000000000001A /* AppUpdateController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdateController.swift; sourceTree = "<group>"; };
 		A2000000000000000000000E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A30000000000000000000001 /* Sonus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sonus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B20000000000000000000001 /* TextPreprocessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextPreprocessorTests.swift; sourceTree = "<group>"; };
 		B20000000000000000000002 /* TextRuleStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRuleStoreTests.swift; sourceTree = "<group>"; };
+		B20000000000000000000003 /* AppVersionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppVersionTests.swift; sourceTree = "<group>"; };
 		B30000000000000000000001 /* SonusCompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SonusCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -119,6 +133,12 @@
 				A20000000000000000000012 /* TextPreprocessor.swift */,
 				A20000000000000000000013 /* TextRuleStore.swift */,
 				A20000000000000000000014 /* TextRulesSettingsView.swift */,
+				A20000000000000000000015 /* UpdateConfig.swift */,
+				A20000000000000000000016 /* AppVersion.swift */,
+				A20000000000000000000017 /* GitHubReleaseClient.swift */,
+				A20000000000000000000018 /* UpdateDownloader.swift */,
+				A20000000000000000000019 /* UpdateInstaller.swift */,
+				A2000000000000000000001A /* AppUpdateController.swift */,
 				A2000000000000000000000F /* StreamingAudioPlayer.swift */,
 				A50000000000000000000004 /* Models */,
 				A2000000000000000000000E /* Info.plist */,
@@ -140,6 +160,7 @@
 			children = (
 				B20000000000000000000001 /* TextPreprocessorTests.swift */,
 				B20000000000000000000002 /* TextRuleStoreTests.swift */,
+				B20000000000000000000003 /* AppVersionTests.swift */,
 			);
 			path = SonusCompanionTests;
 			sourceTree = "<group>";
@@ -252,6 +273,12 @@
 				A10000000000000000000012 /* TextPreprocessor.swift in Sources */,
 				A10000000000000000000013 /* TextRuleStore.swift in Sources */,
 				A10000000000000000000014 /* TextRulesSettingsView.swift in Sources */,
+				A10000000000000000000015 /* UpdateConfig.swift in Sources */,
+				A10000000000000000000016 /* AppVersion.swift in Sources */,
+				A10000000000000000000017 /* GitHubReleaseClient.swift in Sources */,
+				A10000000000000000000018 /* UpdateDownloader.swift in Sources */,
+				A10000000000000000000019 /* UpdateInstaller.swift in Sources */,
+				A1000000000000000000001A /* AppUpdateController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -261,6 +288,7 @@
 			files = (
 				B10000000000000000000001 /* TextPreprocessorTests.swift in Sources */,
 				B10000000000000000000002 /* TextRuleStoreTests.swift in Sources */,
+				B10000000000000000000003 /* AppVersionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -317,7 +345,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sonus.app;
 				PRODUCT_NAME = Sonus;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -341,7 +369,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sonus.app;
 				PRODUCT_NAME = Sonus;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -362,7 +390,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sonus.app.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -383,7 +411,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sonus.app.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

@@ -31,7 +31,7 @@
 9. ~~**Companion 流式播放**~~（已完成：`POST /tts/stream` + `StreamingAudioPlayer`）  
 10. ~~**Companion 登录自启**~~（已完成：`SMAppService.mainApp`）  
 11. ~~**Companion 文本预处理（Text Rules）**~~（已完成：见 [TEXT_RULES.md](TEXT_RULES.md)）  
-12. **Companion GitHub Release + 自动更新**：Phase B CI 已就绪（`v*` → `Sonus-macos.zip`）；Phase C 客户端 updater 待做  
+12. ~~**Companion GitHub Release + 自动更新**~~（CI + 应用内 updater 已完成；待 tag `v0.2.1` 端到端验证）  
 13. **配置中心 / 多音色管理 UI**：视产品需要再开。
 
 ## Phase 2 候选（来自产品规划）

@@ -4,7 +4,27 @@
 
 ---
 
-## 2026-06-28（Companion — Phase B GitHub Release CI）
+## 2026-06-28（Companion — Phase C 应用内自动更新）
+
+### Done
+
+- 移植 updater 六模块：`UpdateConfig`、`AppVersion`、`GitHubReleaseClient`、`UpdateDownloader`、`UpdateInstaller`、`AppUpdateController`
+- 半自动流程：启动/每 24h 检查、NSAlert 三按钮、安装前二次确认、shell 脚本替换 `/Applications/Sonus.app`
+- Settings → **Updates** 区块；非 `/Applications` 路径提示
+- `AppVersionTests`；版本升至 **0.2.1**
+
+### Changed Files
+
+- `SonusCompanion/Update*.swift`、`AppVersion.swift`、`AppUpdateController.swift`
+- `SettingsView.swift`、`MenuBarView.swift`、`SonusCompanionApp.swift`
+- `SonusCompanionTests/AppVersionTests.swift`、`project.pbxproj`
+- `CHANGELOG.md`、`docs/DEVLOG.md`
+
+### Next
+
+- 推 **`v0.2.1`** tag 发版；从 GitHub 安装的 v0.2.0 验证升级到 v0.2.1
+
+---
 
 ### Done
 

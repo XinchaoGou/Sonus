@@ -48,7 +48,7 @@ enum SettingsWindowPresenter {
         }
         let title = window.title
         return title.localizedCaseInsensitiveContains("Settings")
-            || title.localizedCaseInsensitiveContains("Sonus Companion")
+            || title.localizedCaseInsensitiveContains("Sonus")
     }
 }
 
@@ -166,6 +166,7 @@ struct MenuBarView: View {
             }
         }
         .onAppear {
+            AppUpdateController.shared.startAutomaticChecks()
             appState.startup()
         }
     }

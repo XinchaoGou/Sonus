@@ -4,6 +4,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Bindable var appState: AppState
+    @State private var updateController = AppUpdateController.shared
     @State private var serverCheckMessage: String?
     @State private var launchAtLoginEnabled = LaunchAtLoginManager.isRegistered
     @State private var launchAtLoginMessage: String?
@@ -98,6 +99,56 @@ struct SettingsView: View {
                 Toggle("Enable local audio cache", isOn: $appState.cacheEnabled)
                 Button("Clear Cache") {
                     appState.clearCache()
+                }
+            }
+
+            Section("Updates") {
+                Toggle("Automatically check for updates", isOn: Binding(
+                    get: { updateController.autoCheckUpdates },
+                    set: { updateController.autoCheckUpdates = $0 }
+                ))
+
+                LabeledContent("Current version") {
+                    Text(updateController.currentVersionString)
+                        .foregroundStyle(.secondary)
+                }
+
+                if let lastCheck = updateController.lastUpdateCheckDate {
+                    LabeledContent("Last checked") {
+                        Text(lastCheck.formatted(date: .abbreviated, time: .shortened))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                HStack {
+                    Button(updateController.isChecking ? "Checking…" : "Check Now…") {
+                        Task {
+                            await updateController.checkForUpdates(userInitiated: true)
+                        }
+                    }
+                    .disabled(updateController.isChecking || updateController.isDownloading)
+
+                    if updateController.pendingUpdate != nil {
+                        Button(updateController.isDownloading ? "Downloading…" : "Install Update…") {
+                            Task {
+                                await updateController.installPendingUpdate()
+                            }
+                        }
+                        .disabled(updateController.isDownloading)
+                    }
+                }
+
+                if !updateController.statusMessage.isEmpty {
+                    Text(updateController.statusMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(4)
+                }
+
+                if !UpdateConfig.isRunningFromInstallLocation {
+                    Text("Install Sonus in /Applications to enable automatic updates.")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
                 }
             }
 

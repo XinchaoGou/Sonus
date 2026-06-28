@@ -9,7 +9,7 @@ struct SonusCompanionApp: App {
         MenuBarExtra {
             MenuBarView(appState: appState)
         } label: {
-            Label("Sonus Companion", systemImage: menuBarIconName)
+            Label("Sonus", systemImage: menuBarIconName)
         }
         .menuBarExtraStyle(.menu)
 
