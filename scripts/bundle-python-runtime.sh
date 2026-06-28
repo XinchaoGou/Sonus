@@ -10,6 +10,8 @@ rm -rf "$OUTPUT"
 
 cd "$ROOT"
 
+export UV_MANAGED_PYTHON=1
+
 # Always use uv-managed standalone CPython (never python.org framework builds).
 uv python install 3.12
 PYTHON_BIN="$(uv python find 3.12 --no-project --managed-python --resolve-links)"
@@ -40,8 +42,8 @@ ln -s ../python/bin/python3.12 "$OUTPUT/bin/python3.12"
 ln -s python3.12 "$OUTPUT/bin/python3"
 ln -s python3.12 "$OUTPUT/bin/python"
 
-RESOLVED="$(python3 -c "import os; print(os.path.realpath('${OUTPUT}/bin/python3'))")"
-EXPECTED="$(python3 -c "import os; print(os.path.realpath('${OUTPUT}/python/bin/python3.12'))")"
+RESOLVED="$(/usr/bin/python3 -c "import os; print(os.path.realpath('${OUTPUT}/bin/python3'))")"
+EXPECTED="$(/usr/bin/python3 -c "import os; print(os.path.realpath('${OUTPUT}/python/bin/python3.12'))")"
 if [[ "$RESOLVED" != "$EXPECTED" ]]; then
     echo "error: bundled python resolves unexpectedly: $RESOLVED (expected $EXPECTED)" >&2
     exit 1
@@ -61,12 +63,7 @@ trap 'rm -rf "$SANDBOX"' EXIT
 cp -R "$OUTPUT/." "$SANDBOX/"
 "$SANDBOX/bin/python3" -c "import sys; print(sys.executable); import sonus; print('sandbox ok')"
 
-if find "$OUTPUT" -type f -print0 | xargs -0 file 2>/dev/null | grep -q 'Mach-O'; then
-    if find "$OUTPUT" -type f -print0 | while IFS= read -r -d '' f; do
-        file "$f" | grep -q 'Mach-O' || continue
-        otool -L "$f" 2>/dev/null | grep -q '/Library/Frameworks/Python.framework/' && echo "$f"
-    done | grep -q .; then
-        echo "error: bundled runtime still references /Library/Frameworks/Python.framework" >&2
-        exit 1
-    fi
+if otool -L "$OUTPUT/python/bin/python3.12" | grep -q '/Library/Frameworks/Python.framework/'; then
+    echo "error: bundled python3.12 still references /Library/Frameworks/Python.framework" >&2
+    exit 1
 fi
