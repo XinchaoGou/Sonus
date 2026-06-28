@@ -60,7 +60,7 @@ final class BackendManager {
         }
 
         guard EmbeddedBackendConfig.canUseEmbeddedBackend else {
-            let message = "Embedded runtime not found. Use an external server or build a Release app."
+            let message = EmbeddedBackendConfig.runtimeDiagnosticMessage
             updateState(.failed(message))
             return EmbeddedBackendConfig.embeddedBaseURL(port: port)
         }

@@ -20,6 +20,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Pin uv-managed Python
+        run: uv python install 3.12
+
       - name: Build and package Sonus.app
         run: |
           VERSION="${GITHUB_REF_NAME#v}"

@@ -97,6 +97,14 @@ release() {
 
     if [[ -d "$resources_dir" ]]; then
         sign_runtime_binaries "$resources_dir" "$sign_identity"
+        echo "Verifying embedded runtime..."
+        RESOLVED="$(python3 -c "import os; print(os.path.realpath('${resources_dir}/bin/python3'))")"
+        EXPECTED="$(python3 -c "import os; print(os.path.realpath('${resources_dir}/python/bin/python3.12'))")"
+        if [[ "$RESOLVED" != "$EXPECTED" ]]; then
+            echo "error: embedded python is not self-contained: $RESOLVED (expected $EXPECTED)" >&2
+            exit 1
+        fi
+        "$resources_dir/bin/python3" -c "import sonus, uvicorn; print('embedded runtime ok')"
     fi
 
     codesign --force --deep -s "$sign_identity" "$app_path"

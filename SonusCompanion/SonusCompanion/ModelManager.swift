@@ -90,23 +90,88 @@ enum ModelManager {
 
         let total = Double(missing.count)
         for (index, asset) in missing.enumerated() {
-            onProgress(Double(index) / total, "Downloading \(asset.filename)…")
+            let baseProgress = Double(index) / total
+            onProgress(baseProgress + 0.01, "Downloading \(asset.filename)…")
 
             let destination = asset.destination(in: directory)
-            let (tempFile, response) = try await URLSession.shared.download(from: asset.url)
-            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-                throw ModelManagerError.downloadFailed(asset.filename)
-            }
-
-            if FileManager.default.fileExists(atPath: destination.path) {
-                try FileManager.default.removeItem(at: destination)
-            }
-            try FileManager.default.moveItem(at: tempFile, to: destination)
+            try await downloadFile(
+                from: asset.url,
+                to: destination,
+                onProgress: { fileProgress, bytesDownloaded in
+                    let overall = baseProgress + (fileProgress / total)
+                    let megabytes = Double(bytesDownloaded) / 1_000_000.0
+                    onProgress(
+                        min(overall, (Double(index + 1) / total) - 0.01),
+                        String(format: "Downloading %@ (%.1f MB)…", asset.filename, megabytes)
+                    )
+                }
+            )
 
             onProgress(Double(index + 1) / total, "Downloaded \(asset.filename)")
         }
 
         onProgress(1.0, "Models ready")
+    }
+
+    private static func downloadFile(
+        from url: URL,
+        to destination: URL,
+        onProgress: @Sendable @escaping (Double, Int64) -> Void
+    ) async throws {
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 60 * 30
+
+        let (asyncBytes, response) = try await URLSession.shared.bytes(for: request)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw ModelManagerError.downloadFailed(url.lastPathComponent)
+        }
+
+        let expectedLength = response.expectedContentLength
+        let tempURL = destination.appendingPathExtension("download")
+        if FileManager.default.fileExists(atPath: tempURL.path) {
+            try FileManager.default.removeItem(at: tempURL)
+        }
+        FileManager.default.createFile(atPath: tempURL.path, contents: nil)
+        let handle = try FileHandle(forWritingTo: tempURL)
+        defer {
+            try? handle.close()
+        }
+
+        var bytesDownloaded: Int64 = 0
+        var lastReportedMegabytes = -1
+        var buffer = Data()
+        buffer.reserveCapacity(256 * 1024)
+
+        for try await byte in asyncBytes {
+            buffer.append(byte)
+            bytesDownloaded += 1
+
+            if buffer.count >= 256 * 1024 {
+                try handle.write(contentsOf: buffer)
+                buffer.removeAll(keepingCapacity: true)
+            }
+
+            if expectedLength > 0 {
+                let fileProgress = Double(bytesDownloaded) / Double(expectedLength)
+                onProgress(fileProgress, bytesDownloaded)
+            } else {
+                let megabytes = Int(bytesDownloaded / 1_000_000)
+                if megabytes != lastReportedMegabytes {
+                    lastReportedMegabytes = megabytes
+                    onProgress(0, bytesDownloaded)
+                }
+            }
+        }
+
+        if !buffer.isEmpty {
+            try handle.write(contentsOf: buffer)
+        }
+
+        try handle.close()
+        if FileManager.default.fileExists(atPath: destination.path) {
+            try FileManager.default.removeItem(at: destination)
+        }
+        try FileManager.default.moveItem(at: tempURL, to: destination)
     }
 }
 

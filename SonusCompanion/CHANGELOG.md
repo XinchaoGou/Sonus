@@ -2,6 +2,14 @@
 
 All notable changes to Sonus Companion are documented here.
 
+## [0.3.1] - 2026-06-28
+
+### Fixed
+
+- **Embedded runtime**: bundle uv-managed CPython prefix into the app; fix broken `python3` symlinks that pointed at CI/build-machine paths
+- **Model download**: show byte-level progress (MB downloaded) instead of staying at 0% for large files
+- Clearer backend error when embedded runtime is missing or broken
+
 ## [0.3.0] - 2026-06-28
 
 ### Added

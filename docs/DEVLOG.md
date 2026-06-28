@@ -4,7 +4,16 @@
 
 ---
 
-## 2026-06-28（Companion — Embedded Backend）
+## 2026-06-28（Companion — v0.3.1 hotfix: embedded runtime symlinks）
+
+### Done
+
+- **根因**：v0.3.0 打包时 venv 的 `python3` 指向 CI/本机绝对路径（如 `/Library/Frameworks/Python.framework/...`），用户机器上为断链 → `Embedded runtime not found`
+- **修复**：`bundle-python-runtime.sh` 复制 uv CPython prefix 到 `sonus-runtime/python/`，venv shim 改为相对 symlink
+- **模型下载**：按字节更新进度（显示 MB），避免大文件长时间停在 0%
+- 发版 **v0.3.1**
+
+---
 
 ### Done
 
