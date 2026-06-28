@@ -37,8 +37,9 @@ struct TextRulesDocument: Codable, Equatable, Sendable {
 
 enum TextRuleDefaults {
     static let paperProfileID = "paper"
-    static let plainProfileID = "plain"
     static let generalProfileID = "general"
+    /// Legacy built-in profile removed in favor of General; kept for one-time migration.
+    static let legacyPlainProfileID = "plain"
 
     static func builtInProfiles() -> [TextRuleProfile] {
         [
@@ -47,12 +48,6 @@ enum TextRuleDefaults {
                 name: "Paper Reading",
                 builtIn: true,
                 rules: paperRules()
-            ),
-            TextRuleProfile(
-                id: plainProfileID,
-                name: "Plain",
-                builtIn: true,
-                rules: []
             ),
             TextRuleProfile(
                 id: generalProfileID,

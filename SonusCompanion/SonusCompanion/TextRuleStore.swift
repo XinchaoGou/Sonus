@@ -43,6 +43,14 @@ final class TextRuleStore {
         rulesEnabled ? "On · \(activeProfile.name)" : "Off"
     }
 
+    var canDeleteActiveProfile: Bool {
+        guard profiles.count > 1,
+              let active = profiles.first(where: { $0.id == activeProfileId }) else {
+            return false
+        }
+        return !active.builtIn
+    }
+
     private let fileManager: FileManager
     private let configURL: URL
     private let encoder: JSONEncoder
@@ -245,12 +253,15 @@ final class TextRuleStore {
             try? writeDefaults(defaults, to: url, fileManager: fileManager)
             return defaults
         }
-        return migrate(document)
+        return migrate(document, url: url, fileManager: fileManager)
     }
 
-    private static func migrate(_ document: TextRulesDocument) -> TextRulesDocument {
-        var profiles = document.profiles
-        let builtInIDs = Set([TextRuleDefaults.paperProfileID, TextRuleDefaults.plainProfileID, TextRuleDefaults.generalProfileID])
+    private static func migrate(
+        _ document: TextRulesDocument,
+        url: URL,
+        fileManager: FileManager
+    ) -> TextRulesDocument {
+        var profiles = document.profiles.filter { $0.id != TextRuleDefaults.legacyPlainProfileID }
         let existingIDs = Set(profiles.map(\.id))
 
         for builtIn in TextRuleDefaults.builtInProfiles() where !existingIDs.contains(builtIn.id) {
@@ -258,16 +269,23 @@ final class TextRuleStore {
         }
 
         var activeProfileId = document.activeProfileId
+        if activeProfileId == TextRuleDefaults.legacyPlainProfileID {
+            activeProfileId = TextRuleDefaults.generalProfileID
+        }
         if !profiles.contains(where: { $0.id == activeProfileId }) {
             activeProfileId = TextRuleDefaults.paperProfileID
         }
 
-        return TextRulesDocument(
+        let migrated = TextRulesDocument(
             version: document.version,
             rulesEnabled: document.rulesEnabled,
             activeProfileId: activeProfileId,
             profiles: profiles
         )
+        if migrated != document {
+            try? writeDefaults(migrated, to: url, fileManager: fileManager)
+        }
+        return migrated
     }
 
     private static func writeDefaults(

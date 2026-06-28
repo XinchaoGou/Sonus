@@ -21,11 +21,11 @@ final class TextPreprocessorTests: XCTestCase {
     }
 
     func testEmptyEnabledRulesReturnsOriginalText() {
-        let plain = TextRuleProfile(id: "plain", name: "Plain", builtIn: true, rules: [])
+        let general = TextRuleProfile(id: "general", name: "General", builtIn: true, rules: [])
         let input = "Hello [1] world"
         let result = TextPreprocessor.process(
             text: input,
-            profile: plain,
+            profile: general,
             rulesEnabled: true
         )
         XCTAssertEqual(result.text, input)

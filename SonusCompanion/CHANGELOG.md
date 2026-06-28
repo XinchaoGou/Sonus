@@ -8,7 +8,7 @@ All notable changes to Sonus Companion are documented here.
 
 - **Launch at Login** via `SMAppService.mainApp` (Settings toggle)
 - Pending approval hint + shortcut to System Settings → Login Items
-- **Text Rules**: TTS 前可配置正则/字面量替换；Paper / Plain / General Profile；Settings 管理 + Preview；Import/Export JSON；菜单栏 Profile 切换
+- **Text Rules**: TTS 前可配置正则/字面量替换；Paper / General Profile；Settings 管理 + Preview；Import/Export JSON；菜单栏 Profile 切换
 - Unit tests: `SonusCompanionTests`（`TextPreprocessor` / `TextRuleStore`）
 
 ### Removed

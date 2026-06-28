@@ -6,6 +6,41 @@
 
 ---
 
+## 2026-06-28（Companion Text Rules — 移除 Plain Profile）
+
+### Done
+
+- 内置 Profile 精简为 **Paper Reading** + **General**（原文朗读档位）；移除重复的 **Plain**
+- 加载旧配置时自动迁移：`plain` Profile 删除，若曾选中 Plain 则切到 General，并写回 JSON
+
+### Changed Files
+
+- `SonusCompanion/Models/TextRule.swift`、`TextRuleStore.swift`
+- `SonusCompanionTests/TextRuleStoreTests.swift`、`TextPreprocessorTests.swift`
+- `docs/DEVLOG.md`、`docs/TEXT_RULES.md`
+
+---
+
+## 2026-06-28（Companion Text Rules — Profile 切换闪退 + 删除入口）
+
+### Done
+
+- **Plain / General 切换闪退**：从 Paper（多条规则）切到空规则 Profile 时，`ForEach` 仍持有旧 index，`ruleEditor` 访问 `rules[ruleIndex]` 越界崩溃；改为按 `rule.id` 迭代、Rules Section 加 `.id(activeProfileId)` 强制重建、切换 Profile 时重置 `isEditingRules`
+- **删除 Profile 入口**：自定义 Profile 选中时显示 **Delete Profile…** + 确认对话框；内置 Profile 不可删；`TextRuleStore.canDeleteActiveProfile` 供 UI 判断
+- **Restore Built-in Defaults**：仅 Paper Profile 显示
+
+### Changed Files
+
+- `SonusCompanion/TextRulesSettingsView.swift`、`TextRuleStore.swift`
+- `SonusCompanionTests/TextRuleStoreTests.swift`
+- `docs/DEVLOG.md`
+
+### Next
+
+- 真机回归：Settings 内 Profile 切换；自定义 Profile 增删
+
+---
+
 ## 2026-06-28（Companion Text Rules — Move Down 修复）
 
 ### Done

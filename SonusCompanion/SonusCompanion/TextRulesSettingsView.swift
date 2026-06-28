@@ -11,6 +11,7 @@ struct TextRulesSettingsView: View {
     @State private var importExportIsError = false
     @State private var newProfileName = ""
     @State private var showAddProfile = false
+    @State private var showDeleteProfileConfirm = false
     @State private var isEditingRules = false
     @Environment(\.dismiss) private var dismiss
 
@@ -37,6 +38,7 @@ struct TextRulesSettingsView: View {
                         }
                     }
                     .onChange(of: store.activeProfileId) { _, _ in
+                        isEditingRules = false
                         store.save()
                     }
 
@@ -44,10 +46,9 @@ struct TextRulesSettingsView: View {
                         Button("Add Profile…") {
                             showAddProfile = true
                         }
-                        if let active = store.profiles.first(where: { $0.id == store.activeProfileId }),
-                           !active.builtIn {
-                            Button("Delete Profile", role: .destructive) {
-                                deleteActiveCustomProfile()
+                        if store.canDeleteActiveProfile {
+                            Button("Delete Profile…", role: .destructive) {
+                                showDeleteProfileConfirm = true
                             }
                         }
                     }
@@ -58,8 +59,8 @@ struct TextRulesSettingsView: View {
                         Text("No rules in this profile.")
                             .foregroundStyle(.secondary)
                     } else {
-                        ForEach(activeRuleIndices, id: \.self) { index in
-                            ruleEditor(at: index)
+                        ForEach(store.activeProfile.rules) { rule in
+                            ruleEditor(for: rule)
                         }
                     }
 
@@ -67,7 +68,7 @@ struct TextRulesSettingsView: View {
                         Button("Add Rule") {
                             store.addRule()
                         }
-                        if store.activeProfile.builtIn {
+                        if store.activeProfile.id == TextRuleDefaults.paperProfileID {
                             Button("Restore Built-in Defaults") {
                                 restoreDefaults()
                             }
@@ -79,6 +80,7 @@ struct TextRulesSettingsView: View {
                         }
                     }
                 }
+                .id(store.activeProfileId)
 
                 Section("Preview") {
                     TextEditor(text: $sampleText)
@@ -145,21 +147,26 @@ struct TextRulesSettingsView: View {
             } message: {
                 Text("Create a custom profile with no rules.")
             }
+            .confirmationDialog(
+                "Delete \"\(store.activeProfile.name)\"?",
+                isPresented: $showDeleteProfileConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Delete Profile", role: .destructive) {
+                    deleteActiveCustomProfile()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This profile and its rules will be removed permanently.")
+            }
         }
         .frame(minWidth: 560, minHeight: 640)
     }
 
-    private var activeRuleIndices: [Int] {
-        guard let index = store.profiles.firstIndex(where: { $0.id == store.activeProfileId }) else {
-            return []
-        }
-        return store.profiles[index].rules.indices.map { $0 }
-    }
-
     @ViewBuilder
-    private func ruleEditor(at ruleIndex: Int) -> some View {
-        if let profileIndex = store.profiles.firstIndex(where: { $0.id == store.activeProfileId }) {
-            let rule = store.profiles[profileIndex].rules[ruleIndex]
+    private func ruleEditor(for rule: TextRule) -> some View {
+        if let profileIndex = store.profiles.firstIndex(where: { $0.id == store.activeProfileId }),
+           let ruleIndex = store.profiles[profileIndex].rules.firstIndex(where: { $0.id == rule.id }) {
 
             DisclosureGroup {
                 TextField("Name", text: ruleBinding(profileIndex: profileIndex, ruleIndex: ruleIndex, keyPath: \.name))

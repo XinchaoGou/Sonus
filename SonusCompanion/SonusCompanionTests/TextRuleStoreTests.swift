@@ -21,7 +21,7 @@ final class TextRuleStoreTests: XCTestCase {
         let store = TextRuleStore(configURL: configURL)
         XCTAssertTrue(store.rulesEnabled)
         XCTAssertEqual(store.activeProfileId, TextRuleDefaults.paperProfileID)
-        XCTAssertEqual(store.profiles.count, 3)
+        XCTAssertEqual(store.profiles.count, 2)
         XCTAssertTrue(FileManager.default.fileExists(atPath: configURL.path))
     }
 
@@ -31,9 +31,9 @@ final class TextRuleStoreTests: XCTestCase {
         let imported = TextRulesDocument(
             version: 1,
             rulesEnabled: false,
-            activeProfileId: TextRuleDefaults.plainProfileID,
+            activeProfileId: TextRuleDefaults.generalProfileID,
             profiles: [
-                TextRuleProfile(id: TextRuleDefaults.plainProfileID, name: "Plain", builtIn: true, rules: []),
+                TextRuleProfile(id: TextRuleDefaults.generalProfileID, name: "General", builtIn: true, rules: []),
             ]
         )
         let data = try JSONEncoder().encode(imported)
@@ -42,7 +42,7 @@ final class TextRuleStoreTests: XCTestCase {
         try store.importDocument(from: importURL)
 
         XCTAssertFalse(store.rulesEnabled)
-        XCTAssertEqual(store.activeProfileId, TextRuleDefaults.plainProfileID)
+        XCTAssertEqual(store.activeProfileId, TextRuleDefaults.generalProfileID)
         XCTAssertEqual(store.profiles.count, 1)
     }
 
@@ -61,10 +61,43 @@ final class TextRuleStoreTests: XCTestCase {
         let store = TextRuleStore(configURL: configURL)
         store.addCustomProfile(name: "Research Notes")
         XCTAssertEqual(store.activeProfileId.hasPrefix("custom-"), true)
+        XCTAssertTrue(store.canDeleteActiveProfile)
 
         let customID = store.activeProfileId
         try store.deleteProfile(id: customID)
         XCTAssertNotEqual(store.activeProfileId, customID)
+        XCTAssertFalse(store.canDeleteActiveProfile)
+    }
+
+    func testMigratesLegacyPlainProfileToGeneral() throws {
+        let legacy = TextRulesDocument(
+            version: 1,
+            rulesEnabled: true,
+            activeProfileId: TextRuleDefaults.legacyPlainProfileID,
+            profiles: [
+                TextRuleProfile(id: TextRuleDefaults.paperProfileID, name: "Paper Reading", builtIn: true, rules: []),
+                TextRuleProfile(id: TextRuleDefaults.legacyPlainProfileID, name: "Plain", builtIn: true, rules: []),
+                TextRuleProfile(id: TextRuleDefaults.generalProfileID, name: "General", builtIn: true, rules: []),
+            ]
+        )
+        let data = try JSONEncoder().encode(legacy)
+        try data.write(to: configURL)
+
+        let store = TextRuleStore(configURL: configURL)
+
+        XCTAssertEqual(store.activeProfileId, TextRuleDefaults.generalProfileID)
+        XCTAssertFalse(store.profiles.contains { $0.id == TextRuleDefaults.legacyPlainProfileID })
+        XCTAssertEqual(store.profiles.count, 2)
+
+        let persisted = try JSONDecoder().decode(TextRulesDocument.self, from: Data(contentsOf: configURL))
+        XCTAssertEqual(persisted.activeProfileId, TextRuleDefaults.generalProfileID)
+        XCTAssertFalse(persisted.profiles.contains { $0.id == TextRuleDefaults.legacyPlainProfileID })
+    }
+
+    func testCannotDeleteBuiltInProfile() {
+        let store = TextRuleStore(configURL: configURL)
+        store.setActiveProfile(id: TextRuleDefaults.generalProfileID)
+        XCTAssertFalse(store.canDeleteActiveProfile)
     }
 
     func testMoveRuleDownSwapsWithNextItem() throws {

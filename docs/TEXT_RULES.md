@@ -21,7 +21,7 @@
 |------|------|
 | 放置位置 | **Companion 本地执行**；规则仅在 Companion Settings 管理；Python Phase 2 可选复用同一 JSON schema |
 | 规则能力 | 字面量 / 正则、捕获组 `$1`、替换为固定朗读词或空串（删除） |
-| 预设 | 内置 **Paper Reading** 预设 + 空 **Plain**；可逐条开关、编辑、删除；可恢复内置默认 |
+| 预设 | 内置 **Paper Reading** 预设 + 空 **General**；可逐条开关、编辑、删除；可恢复 Paper 内置默认 |
 | 应用顺序 | 当前 Profile 内**已启用规则**按列表顺序 pipeline；Settings 可拖拽排序 |
 | 总开关 | Settings **Enable text rules**；关 = 始终读原文 |
 | 持久化 | `~/Library/Application Support/SonusCompanion/text-rules.json`；Import / Export JSON |
@@ -93,8 +93,8 @@ flowchart LR
       ]
     },
     {
-      "id": "plain",
-      "name": "Plain",
+      "id": "general",
+      "name": "General",
       "builtIn": true,
       "rules": []
     }
@@ -135,9 +135,9 @@ SHA256(processedText | voice | speed | format | rulesFingerprint)
 | `table-ref` | Table reference | `\bTab(?:le)?\.?\s*\d+` | `` | 是 |
 | `collapse-space` | Collapse whitespace | `\s{2,}` | ` ` | 是（放列表末尾） |
 
-**Plain** Profile：`rules: []`，用于读非论文内容（配合总开关或 Profile 切换）。
+**General** Profile：`rules: []`，用于读非论文内容（配合总开关或 Profile 切换；与关闭 text rules 效果相同，但便于菜单栏一键切回 Paper）。
 
-**General** Profile：MVP 可与 Plain 相同，或复制 Paper 子集；用户可在 Settings 中自建 **Custom** Profile（`builtIn: false`）。
+用户可在 Settings 中自建 **Custom** Profile（`builtIn: false`）。
 
 ## Settings UI
 
@@ -146,7 +146,7 @@ SHA256(processedText | voice | speed | format | rulesFingerprint)
 | 控件 | 行为 |
 |------|------|
 | Enable text rules | 总开关，持久化到 JSON |
-| Active profile | Picker：Paper / Plain / General / Custom… |
+| Active profile | Picker：Paper / General / Custom… |
 | 规则列表 | 名称、enabled Toggle、pattern、replacement、Regex Toggle；拖拽排序 |
 | Add rule | 新建用户规则（`builtIn: false`） |
 | Restore built-in defaults | 仅重置当前 Profile 的内置规则为出厂默认 |
@@ -181,7 +181,7 @@ Companion 保持**唯一配置入口**。
 ## 实现顺序
 
 1. `TextPreprocessor` + 单元测试（Swift Testing 或 XCTest）
-2. `TextRuleStore` + 内置 Paper/Plain Profile + 默认 JSON 迁移
+2. `TextRuleStore` + 内置 Paper/General Profile + 默认 JSON 迁移
 3. `AppState.speakSelection()` 接入 + 缓存 fingerprint
 4. `TextRulesSettingsView`（CRUD、Preview、Import/Export）
 5. Profile 切换 + 菜单栏状态
@@ -192,7 +192,7 @@ Companion 保持**唯一配置入口**。
 | 风险 | 缓解 |
 |------|------|
 | 引用格式因期刊/复制源差异大 | 预设 + 用户自定义；Preview + last selection |
-| 规则过 aggressive 删掉正文 | 保守默认；先替换短语再删除；Plain Profile |
+| 规则过 aggressive 删掉正文 | 保守默认；先替换短语再删除；General Profile |
 | Settings 复杂度 | Profile 分场景；Paper 默认即可用 |
 | 改规则后播旧缓存 | rulesFingerprint 纳入 cache key |
 
