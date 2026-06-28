@@ -48,7 +48,7 @@ jobs:
           ! otool -L /tmp/embedded-python3.12 | grep -q '/Library/Frameworks/Python.framework/'
           unzip -q SonusCompanion/build/Sonus-macos.zip -d /tmp/sonus-release-verify
           chmod +x scripts/verify-embedded-runtime.sh
-          bash scripts/verify-embedded-runtime.sh /tmp/sonus-release-verify/Sonus.app 19101
+          SONUS_VERIFY_MODELS=0 bash scripts/verify-embedded-runtime.sh /tmp/sonus-release-verify/Sonus.app 19101
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2

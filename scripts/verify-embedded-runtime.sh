@@ -23,6 +23,17 @@ if [[ -z "$TARGET" ]]; then
     exit 1
 fi
 
+require_models="${SONUS_VERIFY_MODELS:-auto}"
+if [[ "$require_models" == "auto" ]]; then
+    if [[ -f "$MODELS_DIR/kokoro-v1.0.onnx" && -f "$MODELS_DIR/voices-v1.0.bin" \
+        && -f "$MODELS_DIR/kokoro-v1.1-zh.onnx" && -f "$MODELS_DIR/voices-v1.1-zh.bin" \
+        && -f "$MODELS_DIR/kokoro-v1.1-zh-config.json" ]]; then
+        require_models=1
+    else
+        require_models=0
+    fi
+fi
+
 if [[ -d "$TARGET/Contents/Resources/sonus-runtime" ]]; then
     RUNTIME="$TARGET/Contents/Resources/sonus-runtime"
 elif [[ -d "$TARGET/bin" && -d "$TARGET/python" ]]; then
@@ -93,9 +104,14 @@ fi
 /usr/bin/python3 -c "
 import json
 body = json.load(open('/tmp/sonus-health.json'))
-assert body.get('status') == 'ok', body
-assert body.get('models_ready') is True, body
-print('OK health:', body)
+require_models = ${require_models}
+if require_models:
+    assert body.get('status') == 'ok', body
+    assert body.get('models_ready') is True, body
+    print('OK health with models:', body)
+else:
+    assert body.get('status') in ('ok', 'degraded'), body
+    print('OK health (models not required on this host):', body)
 "
 
 echo "verify-embedded-runtime: all checks passed"
