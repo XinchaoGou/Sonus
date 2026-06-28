@@ -1,4 +1,4 @@
-# Sonus Companion
+# Sonus (macOS)
 
 macOS menu bar app that reads selected text from any app and plays it via the local [Sonus](../README.md) TTS service.
 
@@ -15,18 +15,42 @@ macOS menu bar app that reads selected text from any app and plays it via the lo
 cd /path/to/Sonus
 uv run sonus serve
 
-# Terminal 2 — build Companion
+# Terminal 2 — build app
 cd /path/to/Sonus/SonusCompanion
 xcodebuild -scheme SonusCompanion -configuration Debug build
-open ~/Library/Developer/Xcode/DerivedData/SonusCompanion-*/Build/Products/Debug/SonusCompanion.app
+open ~/Library/Developer/Xcode/DerivedData/SonusCompanion-*/Build/Products/Debug/Sonus.app
 ```
 
 Or open `SonusCompanion.xcodeproj` in Xcode and press **Run**.
 
+## Release Build (local)
+
+Produces `build/Sonus-macos.zip` with `Sonus.app` at the zip root (for GitHub Releases):
+
+```bash
+cd /path/to/Sonus/SonusCompanion
+chmod +x build_app.sh
+./build_app.sh release 0.2.0
+unzip -l build/Sonus-macos.zip
+```
+
+For daily use and auto-updates, install to **`/Applications/Sonus.app`**.
+
+## GitHub Release
+
+Push a version tag to build and publish `Sonus-macos.zip` via GitHub Actions:
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+CI workflow: [`.github/workflows/companion-release.yml`](../.github/workflows/companion-release.yml).
+
 ## First Launch
 
 1. Grant **Accessibility** access when prompted  
-   System Settings → Privacy & Security → Accessibility → enable **SonusCompanion**
+   System Settings → Privacy & Security → Accessibility → enable **Sonus**
 2. Optional: allow notifications for error toasts
 3. Select text in any app → press **⌥Esc** or use menu **Speak Selection**
 
@@ -45,9 +69,9 @@ Or open `SonusCompanion.xcodeproj` in Xcode and press **Run**.
 
 ## Logs & Cache
 
-- Log: `~/Library/Logs/SonusCompanion/sonus-companion.log`
-- Audio cache: `~/Library/Caches/SonusCompanion/audio/`
-- Text rules: `~/Library/Application Support/SonusCompanion/text-rules.json`
+- Log: `~/Library/Logs/Sonus/sonus.log`
+- Audio cache: `~/Library/Caches/Sonus/audio/`
+- Text rules: `~/Library/Application Support/Sonus/text-rules.json`
 
 ## API Contract
 
@@ -67,4 +91,3 @@ xcodebuild -scheme SonusCompanion -destination 'platform=macOS' build test
 
 See [docs/COMPANION.md](../docs/COMPANION.md) for architecture details.  
 Text rules: [docs/TEXT_RULES.md](../docs/TEXT_RULES.md).
-

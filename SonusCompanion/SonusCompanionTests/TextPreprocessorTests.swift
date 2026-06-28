@@ -1,5 +1,5 @@
 import XCTest
-@testable import SonusCompanion
+@testable import Sonus
 
 final class TextPreprocessorTests: XCTestCase {
     private let paperProfile = TextRuleProfile(

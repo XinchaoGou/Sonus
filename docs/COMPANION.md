@@ -95,9 +95,9 @@ Companion 将 `logical` 映射为 UI 列表 `{ id, name, language }`。
 
 | 用途 | 路径 |
 |------|------|
-| 日志 | `~/Library/Logs/SonusCompanion/sonus-companion.log` |
-| 音频缓存 | `~/Library/Caches/SonusCompanion/audio/` |
-| 文本规则 | `~/Library/Application Support/SonusCompanion/text-rules.json` |
+| 日志 | `~/Library/Logs/Sonus/sonus.log` |
+| 音频缓存 | `~/Library/Caches/Sonus/audio/` |
+| 文本规则 | `~/Library/Application Support/Sonus/text-rules.json` |
 
 ## 联调
 

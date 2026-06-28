@@ -1,12 +1,12 @@
 import Foundation
 
 enum AppLogger {
-    private static let queue = DispatchQueue(label: "com.sonus.companion.logger")
+    private static let queue = DispatchQueue(label: "com.sonus.app.logger")
     private static let logURL: URL = {
         let dir = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Logs/SonusCompanion", isDirectory: true)
+            .appendingPathComponent("Library/Logs/Sonus", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return dir.appendingPathComponent("sonus-companion.log")
+        return dir.appendingPathComponent("sonus.log")
     }()
 
     static func log(_ message: String) {

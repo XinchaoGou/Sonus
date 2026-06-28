@@ -1,0 +1,44 @@
+name: Companion Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and package Sonus.app
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          cd SonusCompanion
+          chmod +x build_app.sh
+          ./build_app.sh release "$VERSION"
+
+      - name: Verify release zip
+        run: |
+          test -f SonusCompanion/build/Sonus-macos.zip
+          unzip -l SonusCompanion/build/Sonus-macos.zip | grep -F 'Sonus.app/Contents/MacOS/Sonus'
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: SonusCompanion/build/Sonus-macos.zip
+          generate_release_notes: true
+          append_body: true
+          body: |
+            ## Install (macOS)
+
+            1. Download **`Sonus-macos.zip`**
+            2. Unzip and drag **`Sonus.app`** to **`/Applications`**
+            3. Open **Sonus** — if Gatekeeper blocks it, use **System Settings → Privacy & Security → Open Anyway**
+            4. Grant **Accessibility** for selected-text capture
+
+            > This release contains the **menu bar client only**. TTS backend setup: [README](https://github.com/XinchaoGou/Sonus#quick-start).

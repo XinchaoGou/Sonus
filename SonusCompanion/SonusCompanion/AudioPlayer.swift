@@ -24,7 +24,7 @@ final class AudioPlayer: NSObject, AVAudioPlayerDelegate {
 
     private static var cacheDirectory: URL {
         let dir = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Caches/SonusCompanion/audio", isDirectory: true)
+            .appendingPathComponent("Library/Caches/Sonus/audio", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }

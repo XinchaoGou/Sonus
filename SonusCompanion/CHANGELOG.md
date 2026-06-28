@@ -4,6 +4,12 @@ All notable changes to Sonus Companion are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **Release packaging**: `build_app.sh release` builds `Sonus.app`, ad-hoc signs, outputs `build/Sonus-macos.zip` for GitHub Releases
+- **GitHub Actions release**: push tag `v*` triggers `companion-release.yml` to upload `Sonus-macos.zip`
+- App rename: product **`Sonus.app`**, Bundle ID **`com.sonus.app`**; data paths under `~/Library/.../Sonus/`
+
 ### Fixed
 
 - **Settings 窗口置前**：菜单栏点击 Settings 时激活应用并将设置窗口带到最前；设置 `moveToActiveSpace`，在当前桌面显示而非跳回首次打开的 Space

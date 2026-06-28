@@ -64,7 +64,7 @@ final class TextRuleStore {
             try? fileManager.createDirectory(at: supportDir, withIntermediateDirectories: true)
         } else {
             let supportDir = fileManager.homeDirectoryForCurrentUser
-                .appendingPathComponent("Library/Application Support/SonusCompanion", isDirectory: true)
+                .appendingPathComponent("Library/Application Support/Sonus", isDirectory: true)
             try? fileManager.createDirectory(at: supportDir, withIntermediateDirectories: true)
             self.configURL = supportDir.appendingPathComponent("text-rules.json")
         }

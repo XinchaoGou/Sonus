@@ -1,5 +1,5 @@
 import XCTest
-@testable import SonusCompanion
+@testable import Sonus
 
 @MainActor
 final class TextRuleStoreTests: XCTestCase {

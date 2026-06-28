@@ -4,6 +4,44 @@
 
 ---
 
+## 2026-06-28（Companion — Phase B GitHub Release CI）
+
+### Done
+
+- 新增 **`.github/workflows/companion-release.yml`**：`push tags: v*` → `macos-14` 跑 `build_app.sh release` → 上传 **`Sonus-macos.zip`** 到 GitHub Release
+- Release body 含安装步骤；注明仅含菜单栏客户端，后端见 README
+- CI 内校验 zip 含 `Sonus.app/Contents/MacOS/Sonus`
+
+### Changed Files
+
+- `.github/workflows/companion-release.yml`
+- `SonusCompanion/README.md`、`CHANGELOG.md`、`docs/DEVLOG.md`
+
+### Next
+
+- 推 **`v0.2.0`** tag 验证 CI（需 merge 到 GitHub 后执行）
+- Phase C：客户端 updater + Settings Updates
+
+---
+
+## 2026-06-28（Companion — Phase A 重命名 + Release 构建）
+
+### Done（Xcode `PRODUCT_NAME`），Bundle ID **`com.sonus.app`**
+- 用户数据路径统一为 `~/Library/Logs|Caches|Application Support/Sonus/`
+- 新增 **`SonusCompanion/build_app.sh release [version]`**：Release build → ad-hoc 签名 → `build/Sonus-macos.zip`
+- 单元测试 `@testable import Sonus`；`xcodebuild build test` 通过
+
+### Changed Files
+
+- `SonusCompanion.xcodeproj/project.pbxproj`、xcscheme、`Info.plist`
+- `Logger.swift`、`AudioPlayer.swift`、`TextRuleStore.swift`、Tests
+- `SonusCompanion/build_app.sh`、`README.md`、`CHANGELOG.md`
+
+### Next
+
+- Phase B：`companion-release.yml`（tag `v*` → GitHub Release）
+- Phase C：客户端 updater 模块 + Settings Updates 区块
+
 ---
 
 ## 2026-06-28（Companion — Settings 窗口置前）
