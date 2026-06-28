@@ -51,9 +51,11 @@ release() {
     xcodebuild \
         -scheme "$SCHEME" \
         -configuration "$CONFIGURATION" \
+        -destination 'generic/platform=macOS' \
         -derivedDataPath "$DERIVED_DATA" \
         MARKETING_VERSION="$version" \
         CURRENT_PROJECT_VERSION="$version" \
+        CODE_SIGN_IDENTITY="-" \
         build
 
     if [[ ! -d "$app_path" ]]; then

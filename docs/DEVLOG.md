@@ -26,7 +26,9 @@
 
 ## 2026-06-28（Companion — Phase A 重命名 + Release 构建）
 
-### Done（Xcode `PRODUCT_NAME`），Bundle ID **`com.sonus.app`**
+### Done
+
+- 产物重命名：**`Sonus.app`**（Xcode `PRODUCT_NAME`），Bundle ID **`com.sonus.app`**
 - 用户数据路径统一为 `~/Library/Logs|Caches|Application Support/Sonus/`
 - 新增 **`SonusCompanion/build_app.sh release [version]`**：Release build → ad-hoc 签名 → `build/Sonus-macos.zip`
 - 单元测试 `@testable import Sonus`；`xcodebuild build test` 通过
