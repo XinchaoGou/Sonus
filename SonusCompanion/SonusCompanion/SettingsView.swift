@@ -144,8 +144,10 @@ struct SettingsView: View {
             appState.setVoice(appState.selectedVoiceID)
             appState.persistSettings()
             stopHotkeyRecording()
+            SettingsWindowPresenter.restoreMenuBarActivationPolicy()
         }
         .onAppear {
+            SettingsWindowPresenter.configureSettingsWindowIfPresent()
             appState.isAccessibilityTrusted = SelectedTextReader.isAccessibilityTrusted
             if !appState.isAccessibilityTrusted {
                 SelectedTextReader.requestAccessibilityPermission()

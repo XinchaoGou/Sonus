@@ -1,4 +1,56 @@
+import AppKit
 import SwiftUI
+
+enum SettingsWindowPresenter {
+    static func show(_ openSettings: OpenSettingsAction) {
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+        openSettings()
+        bringSettingsWindowToCurrentSpace(retryIfMissing: true)
+    }
+
+    static func configureForCurrentSpace(_ window: NSWindow) {
+        var behavior = window.collectionBehavior
+        behavior.insert(.moveToActiveSpace)
+        behavior.remove(.canJoinAllSpaces)
+        window.collectionBehavior = behavior
+    }
+
+    static func configureSettingsWindowIfPresent() {
+        guard let window = settingsWindow else { return }
+        configureForCurrentSpace(window)
+    }
+
+    static func restoreMenuBarActivationPolicy() {
+        NSApp.setActivationPolicy(.accessory)
+    }
+
+    private static func bringSettingsWindowToCurrentSpace(retryIfMissing: Bool) {
+        DispatchQueue.main.async {
+            guard let window = settingsWindow else {
+                if retryIfMissing {
+                    bringSettingsWindowToCurrentSpace(retryIfMissing: false)
+                }
+                return
+            }
+            configureForCurrentSpace(window)
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    private static var settingsWindow: NSWindow? {
+        NSApp.windows.first(where: isSettingsWindow)
+    }
+
+    private static func isSettingsWindow(_ window: NSWindow) -> Bool {
+        if window.identifier?.rawValue.localizedCaseInsensitiveContains("Settings") == true {
+            return true
+        }
+        let title = window.title
+        return title.localizedCaseInsensitiveContains("Settings")
+            || title.localizedCaseInsensitiveContains("Sonus Companion")
+    }
+}
 
 struct MenuBarView: View {
     @Bindable var appState: AppState
@@ -91,7 +143,7 @@ struct MenuBarView: View {
             Divider()
 
             Button("Settings…") {
-                openSettings()
+                SettingsWindowPresenter.show(openSettings)
             }
 
             Button("Check Sonus Server") {

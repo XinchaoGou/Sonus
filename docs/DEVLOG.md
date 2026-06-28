@@ -6,6 +6,20 @@
 
 ---
 
+## 2026-06-28（Companion — Settings 窗口置前）
+
+### Done
+
+- 菜单栏 **Settings…** 点击后设置窗口被其他应用遮挡：新增 `SettingsWindowPresenter`，临时切换 `activationPolicy` 为 `.regular`、`activate(ignoringOtherApps:)`，并将 Settings 窗口 `makeKeyAndOrderFront`；关闭设置窗口后恢复 `.accessory`（无 Dock 图标）
+- **多桌面 / Space**：为 Settings 窗口设置 `collectionBehavior.moveToActiveSpace`，移除 `orderFrontRegardless`（后者会切回旧 Space 而非把窗口移到当前桌面）
+
+### Changed Files
+
+- `SonusCompanion/MenuBarView.swift`、`SettingsView.swift`
+- `SonusCompanion/CHANGELOG.md`、`docs/DEVLOG.md`
+
+---
+
 ## 2026-06-28（Companion Text Rules — 移除 Plain Profile）
 
 ### Done
