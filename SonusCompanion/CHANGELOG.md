@@ -4,6 +4,13 @@ All notable changes to Sonus Companion are documented here.
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-06-28
+
+### Added
+
+- **App icon**: `Assets.xcassets` / `AppIcon` for Dock, Finder, and `/Applications`
+- Icon source assets and generator under `SonusCompanion/scripts/`
+
 ## [0.2.1] - 2026-06-28
 
 ### Added

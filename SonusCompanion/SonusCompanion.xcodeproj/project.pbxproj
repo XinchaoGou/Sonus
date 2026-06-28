@@ -31,6 +31,7 @@
 		A10000000000000000000018 /* UpdateDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* UpdateDownloader.swift */; };
 		A10000000000000000000019 /* UpdateInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000019 /* UpdateInstaller.swift */; };
 		A1000000000000000000001A /* AppUpdateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001A /* AppUpdateController.swift */; };
+		A1000000000000000000001B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001B /* Assets.xcassets */; };
 		B10000000000000000000001 /* TextPreprocessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* TextPreprocessorTests.swift */; };
 		B10000000000000000000002 /* TextRuleStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* TextRuleStoreTests.swift */; };
 		B10000000000000000000003 /* AppVersionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000003 /* AppVersionTests.swift */; };
@@ -62,6 +63,7 @@
 		A20000000000000000000019 /* UpdateInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateInstaller.swift; sourceTree = "<group>"; };
 		A2000000000000000000001A /* AppUpdateController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdateController.swift; sourceTree = "<group>"; };
 		A2000000000000000000000E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A2000000000000000000001B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A30000000000000000000001 /* Sonus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sonus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B20000000000000000000001 /* TextPreprocessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextPreprocessorTests.swift; sourceTree = "<group>"; };
 		B20000000000000000000002 /* TextRuleStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRuleStoreTests.swift; sourceTree = "<group>"; };
@@ -78,6 +80,17 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A70000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000000000000000000001B /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXContainerItemProxy section */
 		B80000000000000000000001 /* PBXContainerItemProxy */ = {
@@ -141,6 +154,7 @@
 				A2000000000000000000001A /* AppUpdateController.swift */,
 				A2000000000000000000000F /* StreamingAudioPlayer.swift */,
 				A50000000000000000000004 /* Models */,
+				A2000000000000000000001B /* Assets.xcassets */,
 				A2000000000000000000000E /* Info.plist */,
 			);
 			path = SonusCompanion;
@@ -185,6 +199,7 @@
 			buildPhases = (
 				A70000000000000000000001 /* Sources */,
 				A40000000000000000000001 /* Frameworks */,
+				A70000000000000000000002 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -332,6 +347,7 @@
 		AA0000000000000000000003 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -345,7 +361,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.1;
+				MARKETING_VERSION = 0.2.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sonus.app;
 				PRODUCT_NAME = Sonus;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -356,6 +372,7 @@
 		AA0000000000000000000004 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -369,7 +386,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.1;
+				MARKETING_VERSION = 0.2.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sonus.app;
 				PRODUCT_NAME = Sonus;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -390,7 +407,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.1;
+				MARKETING_VERSION = 0.2.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sonus.app.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -411,7 +428,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.1;
+				MARKETING_VERSION = 0.2.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sonus.app.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

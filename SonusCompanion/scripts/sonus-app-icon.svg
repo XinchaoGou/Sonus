@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="55%" stop-color="#4338CA"/>
+      <stop offset="100%" stop-color="#1E1B4B"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="48%" r="42%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+  <g fill="#FFFFFF">
+    <!-- SF Symbol waveform: 5 rounded bars, varying heights -->
+    <rect x="292" y="412" width="56" height="200" rx="28"/>
+    <rect x="380" y="332" width="56" height="360" rx="28"/>
+    <rect x="468" y="452" width="56" height="120" rx="28"/>
+    <rect x="556" y="292" width="56" height="440" rx="28"/>
+    <rect x="644" y="432" width="56" height="160" rx="28"/>
+  </g>
+</svg>

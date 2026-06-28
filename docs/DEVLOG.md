@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-06-28（Companion — App Icon + v0.2.2）
+
+### Done
+
+- 新增 **`Assets.xcassets` / AppIcon**；Xcode `ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon`
+- 图标生成脚本与源文件：`SonusCompanion/scripts/`（SVG + `generate_app_icon.py`）
+- 版本 **0.2.2**；push tag 发版
+
+### Changed Files
+
+- `Assets.xcassets/**`、`project.pbxproj`、`Info.plist`
+- `SonusCompanion/scripts/**`、`CHANGELOG.md`
+
+---
+
 ## 2026-06-28（Companion — Phase C 应用内自动更新）
 
 ### Done
