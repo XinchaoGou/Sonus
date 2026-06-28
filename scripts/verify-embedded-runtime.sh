@@ -49,11 +49,12 @@ if [[ ! -x "$PYTHON" && ! -L "$PYTHON" ]]; then
     exit 1
 fi
 
+RUNTIME_REAL="$(/usr/bin/python3 -c "import os; print(os.path.realpath('${RUNTIME}'))")"
 RESOLVED="$(/usr/bin/python3 -c "import os; print(os.path.realpath('${PYTHON}'))")"
 case "$RESOLVED" in
-    "$RUNTIME"*) ;;
+    "$RUNTIME_REAL"*) ;;
     *)
-        echo "error: python resolves outside runtime: $RESOLVED" >&2
+        echo "error: python resolves outside runtime: $RESOLVED (runtime=$RUNTIME_REAL)" >&2
         exit 1
         ;;
 esac
@@ -70,10 +71,11 @@ export SONUS_CACHE_DIR="${TMPDIR:-/tmp}/sonus-verify-cache"
 export SONUS_LOG_LEVEL=info
 
 SONUS_FILE="$("$PYTHON" -c "import sonus, uvicorn; print(sonus.__file__)")"
-case "$SONUS_FILE" in
-    "$RUNTIME"*) ;;
+SONUS_REAL="$(/usr/bin/python3 -c "import os; print(os.path.realpath('${SONUS_FILE}'))")"
+case "$SONUS_REAL" in
+    "$RUNTIME_REAL"*) ;;
     *)
-        echo "error: sonus resolves outside runtime: $SONUS_FILE" >&2
+        echo "error: sonus resolves outside runtime: $SONUS_REAL (runtime=$RUNTIME_REAL)" >&2
         exit 1
         ;;
 esac

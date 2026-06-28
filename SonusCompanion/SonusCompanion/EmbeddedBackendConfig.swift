@@ -83,10 +83,10 @@ enum EmbeddedBackendConfig {
             "-c",
             """
             import os, sonus, uvicorn
-            runtime = os.environ["SONUS_RUNTIME_DIR"]
+            runtime = os.path.realpath(os.environ["SONUS_RUNTIME_DIR"])
             path = os.path.realpath(sonus.__file__)
-            if not path.startswith(os.path.realpath(runtime)):
-                raise SystemExit(f"sonus not bundled: {path}")
+            if not path.startswith(runtime):
+                raise SystemExit(f"sonus not bundled: {path} (runtime={runtime})")
             """,
         ]
         process.standardOutput = Pipe()

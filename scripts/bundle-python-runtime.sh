@@ -64,10 +64,12 @@ find "$OUTPUT" -type d -name "test" -prune -exec rm -rf {} + 2>/dev/null || true
 
 echo "Runtime ready: $OUTPUT/bin/python3"
 SONUS_FILE="$("$OUTPUT/bin/python3" -c "import sonus; print(sonus.__file__)")"
-case "$SONUS_FILE" in
-    "$OUTPUT"*) ;;
+SONUS_REAL="$(/usr/bin/python3 -c "import os; print(os.path.realpath('${SONUS_FILE}'))")"
+OUTPUT_REAL="$(/usr/bin/python3 -c "import os; print(os.path.realpath('${OUTPUT}'))")"
+case "$SONUS_REAL" in
+    "$OUTPUT_REAL"*) ;;
     *)
-        echo "error: sonus resolves outside bundle: $SONUS_FILE" >&2
+        echo "error: sonus resolves outside bundle: $SONUS_REAL (bundle=$OUTPUT_REAL)" >&2
         exit 1
         ;;
 esac
