@@ -204,6 +204,14 @@ struct SettingsView: View {
                     }
                 }
 
+                if updateController.isDownloading {
+                    if updateController.downloadProgress > 0 {
+                        ProgressView(value: updateController.downloadProgress)
+                    } else {
+                        ProgressView()
+                    }
+                }
+
                 if !updateController.statusMessage.isEmpty {
                     Text(updateController.statusMessage)
                         .font(.caption)

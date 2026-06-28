@@ -65,6 +65,11 @@ final class BackendManager {
             return EmbeddedBackendConfig.embeddedBaseURL(port: port)
         }
 
+        if let launchError = EmbeddedBackendConfig.runtimeLaunchError() {
+            updateState(.failed(launchError))
+            return EmbeddedBackendConfig.embeddedBaseURL(port: port)
+        }
+
         startupTask?.cancel()
         startupTask = Task {
             await self.runEmbeddedStartup(port: port, customModelsPath: customModelsPath)
@@ -135,8 +140,17 @@ final class BackendManager {
         if ready {
             updateState(.running)
         } else {
+            let stderr = drainProcessOutput(process)
             stopSpawnedProcess()
-            updateState(.failed("Embedded backend did not become ready on port \(port)."))
+            if !stderr.isEmpty {
+                AppLogger.log("embedded backend stderr: \(stderr)")
+            }
+            let detail = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            if detail.isEmpty {
+                updateState(.failed("Embedded backend did not become ready on port \(port)."))
+            } else {
+                updateState(.failed("Embedded backend did not become ready on port \(port): \(detail)"))
+            }
         }
     }
 
@@ -242,6 +256,22 @@ final class BackendManager {
         state = newState
         onStateChange?(newState)
         AppLogger.log("backend state: \(newState.displayName)")
+    }
+
+    private func drainProcessOutput(_ process: Process?) -> String {
+        guard let process else { return "" }
+        let stdout = readPipeText(process.standardOutput)
+        let stderr = readPipeText(process.standardError)
+        return [stdout, stderr]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: "\n")
+    }
+
+    private func readPipeText(_ handle: Any?) -> String {
+        guard let pipe = handle as? Pipe else { return "" }
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        return String(data: data, encoding: .utf8) ?? ""
     }
 }
 

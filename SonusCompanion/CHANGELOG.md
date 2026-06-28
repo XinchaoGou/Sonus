@@ -2,6 +2,16 @@
 
 All notable changes to Sonus Companion are documented here.
 
+## [Unreleased]
+
+## [0.3.2] - 2026-06-28
+
+### Fixed
+
+- **Embedded runtime**: force uv-managed standalone CPython (`--managed-python`); reject python.org framework builds that crash with dyld exit code 6 on machines without `/Library/Frameworks/Python.framework`
+- **Backend errors**: smoke-test embedded Python before spawn; surface stderr when uvicorn fails to become ready
+- **App update download**: show byte-level progress (percentage and MB) with a progress panel and Settings progress bar
+
 ## [0.3.1] - 2026-06-28
 
 ### Fixed

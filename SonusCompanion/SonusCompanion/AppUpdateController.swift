@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import Observation
+import SwiftUI
 
 @MainActor
 @Observable
@@ -27,6 +28,7 @@ final class AppUpdateController {
 
     var pendingUpdate: AvailableUpdate?
     var statusMessage = ""
+    var downloadProgress: Double = 0
     var isChecking = false
     var isDownloading = false
 
@@ -40,6 +42,7 @@ final class AppUpdateController {
 
     private var automaticChecksStarted = false
     private var periodicCheckTask: Task<Void, Never>?
+    private var downloadProgressPanel: NSPanel?
 
     private init() {}
 
@@ -125,12 +128,24 @@ final class AppUpdateController {
         }
 
         isDownloading = true
+        downloadProgress = 0
         statusMessage = "Downloading update…"
-        defer { isDownloading = false }
+        showDownloadProgressPanel(version: update.versionString)
+        defer {
+            isDownloading = false
+            hideDownloadProgressPanel()
+        }
 
         do {
-            let extractedApp = try await UpdateDownloader.downloadAndExtract(update: update)
+            let extractedApp = try await UpdateDownloader.downloadAndExtract(update: update) { [weak self] progress, message in
+                Task { @MainActor in
+                    self?.downloadProgress = progress
+                    self?.statusMessage = message
+                }
+            }
+            downloadProgress = 1
             statusMessage = "Ready to install update \(update.versionString)."
+            hideDownloadProgressPanel()
 
             guard confirmInstall(version: update.versionString) else {
                 statusMessage = "Update \(update.versionString) downloaded."
@@ -228,6 +243,51 @@ final class AppUpdateController {
     private func activateForAlert() {
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func showDownloadProgressPanel(version: String) {
+        hideDownloadProgressPanel()
+        activateForAlert()
+
+        let panel = NSPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 340, height: 120),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        panel.title = "Downloading Sonus \(version)"
+        panel.isReleasedWhenClosed = false
+        panel.level = .floating
+        panel.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
+        panel.contentView = NSHostingView(rootView: UpdateProgressView(controller: self))
+        panel.center()
+        panel.makeKeyAndOrderFront(nil)
+        downloadProgressPanel = panel
+    }
+
+    private func hideDownloadProgressPanel() {
+        downloadProgressPanel?.close()
+        downloadProgressPanel = nil
+    }
+}
+
+private struct UpdateProgressView: View {
+    @Bindable var controller: AppUpdateController
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if controller.downloadProgress > 0 {
+                ProgressView(value: controller.downloadProgress)
+            } else {
+                ProgressView()
+            }
+            Text(controller.statusMessage)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

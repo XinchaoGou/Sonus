@@ -4,6 +4,43 @@
 
 ---
 
+## 2026-06-28（Companion — v0.3.2 hotfix: embedded runtime dyld / exit 6）
+
+### Done
+
+- **根因**：v0.3.1 CI 打包时 `uv python find` 选中了 **python.org framework** 解释器；二进制硬编码 `/Library/Frameworks/Python.framework/Versions/3.12/Python`，用户机器无该路径 → dyld abort（**exit code 6**）→ `Backend exited unexpectedly` / `did not become ready on port 8000`（与模型是否就绪无关）
+- **修复**：`bundle-python-runtime.sh` 强制 `--managed-python`；拒绝 framework 链接；sandbox + CI 校验 zip 内 `python3.12` 不引用 `Python.framework`
+- **Companion**：`EmbeddedBackendConfig.runtimeLaunchError()` 启动前 smoke test；`BackendManager` 失败时记录 stderr
+- **验证**：本地 bundle + `uvicorn` health `models_ready=true`；Xcode build 通过
+
+### Changed Files
+
+- `scripts/bundle-python-runtime.sh`、`SonusCompanion/build_app.sh`
+- `.github/workflows/companion-release.yml`
+- `SonusCompanion/EmbeddedBackendConfig.swift`、`BackendManager.swift`
+- `SonusCompanion/CHANGELOG.md`
+
+### Next
+
+- 打 tag **v0.3.2** 发版；用户升级后 embedded backend 应可直接用 Application Support 模型目录
+
+---
+
+## 2026-06-28（Companion — 应用更新下载进度）
+
+### Done
+
+- **`UpdateDownloader`**：改用流式下载，按字节回报进度（百分比 + MB）；解压阶段显示「Extracting update…」
+- **`AppUpdateController`**：新增 `downloadProgress`；下载时弹出浮动进度窗口
+- **Settings → Updates**：下载中显示 `ProgressView` 与状态文案
+
+### Changed Files
+
+- `SonusCompanion/UpdateDownloader.swift`、`AppUpdateController.swift`、`SettingsView.swift`
+- `SonusCompanion/CHANGELOG.md`
+
+---
+
 ## 2026-06-28（Companion — v0.3.1 hotfix: embedded runtime symlinks）
 
 ### Done

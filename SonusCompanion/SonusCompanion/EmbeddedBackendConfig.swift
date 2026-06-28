@@ -63,9 +63,64 @@ enum EmbeddedBackendConfig {
         let python312 = bin.appendingPathComponent("python3.12")
         let resolved = python312.resolvingSymlinksInPath()
         if !FileManager.default.isExecutableFile(atPath: resolved.path) {
-            return "Broken Python shim at \(python312.path) → \(resolved.path). Reinstall Sonus v0.3.1+."
+            return "Broken Python shim at \(python312.path) → \(resolved.path). Reinstall Sonus v0.3.2+."
+        }
+        if let launchError = runtimeLaunchError() {
+            return launchError
         }
         return "Runtime found at \(resolved.path)"
+    }
+
+    /// Returns nil when embedded Python can execute; otherwise a user-facing error.
+    static func runtimeLaunchError() -> String? {
+        guard let python = embeddedPythonExecutable else {
+            return "Embedded Python runtime was not found in the app bundle."
+        }
+
+        let process = Process()
+        process.executableURL = python
+        process.arguments = ["-c", "import sonus, uvicorn"]
+        process.standardOutput = Pipe()
+        process.standardError = Pipe()
+
+        var environment = ProcessInfo.processInfo.environment
+        environment["PYTHONUNBUFFERED"] = "1"
+        if let runtime = embeddedRuntimeURL {
+            let binPath = runtime.appendingPathComponent("bin").path
+            environment["PATH"] = binPath + ":" + (environment["PATH"] ?? "")
+        }
+        process.environment = environment
+
+        do {
+            try process.run()
+        } catch {
+            return "Failed to launch embedded Python: \(error.localizedDescription)"
+        }
+
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else {
+            let stderr = readPipeText(process.standardError)
+            if stderr.contains("Library not loaded")
+                || stderr.contains("Python.framework")
+                || process.terminationStatus == 6 {
+                return """
+                Embedded Python cannot load on this Mac (exit \(process.terminationStatus)). \
+                Install Sonus v0.3.2+ or enable Settings → Advanced → Use external Sonus server.
+                """
+            }
+            let detail = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            if detail.isEmpty {
+                return "Embedded Python failed to start (exit \(process.terminationStatus))."
+            }
+            return "Embedded Python failed to start: \(detail)"
+        }
+        return nil
+    }
+
+    private static func readPipeText(_ handle: Any?) -> String {
+        guard let pipe = handle as? Pipe else { return "" }
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        return String(data: data, encoding: .utf8) ?? ""
     }
 
     #if DEBUG

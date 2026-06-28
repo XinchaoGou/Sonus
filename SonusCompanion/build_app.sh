@@ -104,6 +104,10 @@ release() {
             echo "error: embedded python is not self-contained: $RESOLVED (expected $EXPECTED)" >&2
             exit 1
         fi
+        if otool -L "$resources_dir/python/bin/python3.12" | grep -q '/Library/Frameworks/Python.framework/'; then
+            echo "error: embedded python still links to python.org framework" >&2
+            exit 1
+        fi
         "$resources_dir/bin/python3" -c "import sonus, uvicorn; print('embedded runtime ok')"
     fi
 
