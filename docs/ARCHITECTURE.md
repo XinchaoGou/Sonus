@@ -78,9 +78,10 @@ flowchart LR
 
 ## Sonus Companion（macOS 客户端）
 
-仓库 **`SonusCompanion/`** 与 Python 后端**进程分离**，仅通过 HTTP 契约耦合。Companion 特有逻辑（选区捕获、流式播放、登录自启、**Text Rules 文本预处理**）见：
+仓库 **`SonusCompanion/`** 与 Python 后端默认**同机 HTTP 耦合**；Release 版 App **内置 embedded Python runtime**，由 `BackendManager` 拉起本地 uvicorn，无需用户单独 `sonus serve` 或 Docker。Companion 特有逻辑（选区捕获、流式播放、登录自启、**Text Rules 文本预处理**、**Embedded Backend**）见：
 
 - [COMPANION.md](COMPANION.md) — 模块与 API 适配  
 - [TEXT_RULES.md](TEXT_RULES.md) — TTS 前可配置替换（已实现）
 
-**约定**：Companion 发给 `/tts` / `/tts/stream` 的 `text` 已是用户意图朗读的最终字符串；服务端不做引用/索引类净化（[DECISIONS 015](DECISIONS.md#015--companion-文本预处理在客户端执行)）。
+**约定**：Companion 发给 `/tts` / `/tts/stream` 的 `text` 已是用户意图朗读的最终字符串；服务端不做引用/索引类净化（[DECISIONS 015](DECISIONS.md#015--companion-文本预处理在客户端执行)）。  
+**Embedded**：Release App 在 `Contents/Resources/sonus-runtime/` 携带 venv；Debug 默认连接外部 `sonus serve`（Settings → Advanced）。

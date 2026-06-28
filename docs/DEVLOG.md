@@ -4,6 +4,33 @@
 
 ---
 
+## 2026-06-28（Companion — Embedded Backend）
+
+### Done
+
+- **`BackendManager`**：Release 下 spawn/kill embedded uvicorn；health 轮询；Quit 清理子进程
+- **`ModelManager`**：Kokoro 模型检测（Application Support / `SONUS_MODELS_DIR` / 自定义路径）+ 按需下载
+- **`EmbeddedBackendConfig`**：bundled runtime 路径；Debug 默认外连 / Release 默认 embedded
+- **Settings**：Backend 状态 + 端口；Advanced 外连 URL / 自定义模型目录
+- **Python**：`SONUS_MODELS_DIR`、`GET /health` 增加 `models_ready`；`model_status.py`
+- **打包**：`scripts/bundle-python-runtime.sh`；`SonusCompanion/build_app.sh release` 嵌入 venv
+- **测试**：pytest 71 passed；Xcode `ModelManagerTests` + 全量单元测试通过
+
+### Changed Files
+
+- `SonusCompanion/BackendManager.swift`、`ModelManager.swift`、`EmbeddedBackendConfig.swift`
+- `AppState.swift`、`SettingsView.swift`、`MenuBarView.swift`
+- `src/sonus/config.py`、`app.py`、`model_status.py`
+- `scripts/bundle-python-runtime.sh`、`SonusCompanion/build_app.sh`
+- `docs/COMPANION.md`、`ARCHITECTURE.md`、`ROADMAP.md`、`DECISIONS.md`（016）
+
+### Next
+
+- `./build_app.sh release` 端到端验证（含首次模型下载 + ⌥Esc）
+- Phase 1.5：embedded bundle ffmpeg（MP3）
+
+---
+
 ## 2026-06-28（Companion — App Icon + v0.2.2）
 
 ### Done

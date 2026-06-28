@@ -15,6 +15,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
       - name: Build and package Sonus.app
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
@@ -26,6 +31,7 @@ jobs:
         run: |
           test -f SonusCompanion/build/Sonus-macos.zip
           unzip -l SonusCompanion/build/Sonus-macos.zip | grep -F 'Sonus.app/Contents/MacOS/Sonus'
+          unzip -l SonusCompanion/build/Sonus-macos.zip | grep -F 'Sonus.app/Contents/Resources/sonus-runtime/bin/python3'
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -40,5 +46,8 @@ jobs:
             2. Unzip and drag **`Sonus.app`** to **`/Applications`**
             3. Open **Sonus** — if Gatekeeper blocks it, use **System Settings → Privacy & Security → Open Anyway**
             4. Grant **Accessibility** for selected-text capture
+            5. On first launch, allow **model download** in Settings → Backend (or point to an existing `models/` directory in Advanced)
 
-            > This release contains the **menu bar client only**. TTS backend setup: [README](https://github.com/XinchaoGou/Sonus#quick-start).
+            This release includes an **embedded TTS backend** — no separate `sonus serve` or Docker required for the menu bar app. External agents can still use `http://127.0.0.1:8000` while Sonus is running.
+
+            Developer / server setup: [README](https://github.com/XinchaoGou/Sonus#quick-start).

@@ -9,6 +9,7 @@ from fastapi.responses import Response, StreamingResponse
 
 from sonus.config import Settings
 from sonus.factory import build_engine, build_tts_service
+from sonus.model_status import missing_model_files, models_ready
 from sonus.logging_config import configure_logging, log_startup
 from sonus.middleware import RequestLoggingMiddleware
 from sonus.openai_compat import OpenAISpeechRequest, resolve_openai_voice, to_output_format
@@ -50,8 +51,16 @@ app.add_middleware(RequestLoggingMiddleware)
 
 
 @app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+def health(settings: Settings = Depends(get_settings)) -> dict[str, str | bool | list[str]]:
+    """Liveness probe; includes model file readiness for embedded clients."""
+    ready = models_ready(settings)
+    payload: dict[str, str | bool | list[str]] = {
+        "status": "ok" if ready else "degraded",
+        "models_ready": ready,
+    }
+    if not ready:
+        payload["missing_models"] = missing_model_files(settings)
+    return payload
 
 
 @app.get("/voices")

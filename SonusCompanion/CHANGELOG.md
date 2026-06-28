@@ -2,7 +2,20 @@
 
 All notable changes to Sonus Companion are documented here.
 
-## [Unreleased]
+## [0.3.0] - 2026-06-28
+
+### Added
+
+- **Embedded Backend**: Release App bundles Python runtime and spawns local uvicorn (no separate `sonus serve` / Docker required)
+- `BackendManager`, `ModelManager`, `EmbeddedBackendConfig`
+- Settings → **Backend** status + port; **Advanced** → external server / custom models path
+- First-launch model download to `~/Library/Application Support/Sonus/models/`
+- `scripts/bundle-python-runtime.sh`; `build_app.sh release` embeds venv into `.app`
+
+### Changed
+
+- `GET /health` includes `models_ready` (Python backend)
+- Debug builds default to external server; Release defaults to embedded backend
 
 ## [0.2.2] - 2026-06-28
 

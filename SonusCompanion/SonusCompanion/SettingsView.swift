@@ -14,9 +14,42 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Sonus Server") {
-                TextField("Server URL", text: $appState.serverURL)
-                    .textFieldStyle(.roundedBorder)
+            Section("Backend") {
+                HStack {
+                    Text("Status")
+                    Spacer()
+                    backendStatusLabel
+                }
+
+                if case .downloadingModels(let progress, let message) = appState.backendState {
+                    ProgressView(value: progress)
+                    Text(message)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if !appState.backendStatusMessage.isEmpty {
+                    Text(appState.backendStatusMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                }
+
+                if !appState.useExternalServer {
+                    Stepper(value: $appState.serverPort, in: 1024...65535) {
+                        Text("Port: \(appState.serverPort)")
+                    }
+
+                    LabeledContent("Models") {
+                        Text(modelsLocationSummary)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.trailing)
+                    }
+
+                    Button("Download / Verify Models") {
+                        Task { await appState.restartBackend() }
+                    }
+                }
+
                 HStack {
                     Button("Check Connection") {
                         Task {
@@ -29,6 +62,39 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                             .lineLimit(3)
                     }
+                }
+            }
+
+            Section("Advanced") {
+                Toggle("Use external Sonus server", isOn: $appState.useExternalServer)
+                    .onChange(of: appState.useExternalServer) { _, _ in
+                        appState.applyBackendSettingsChange()
+                    }
+
+                if appState.useExternalServer {
+                    TextField("Server URL", text: $appState.serverURL)
+                        .textFieldStyle(.roundedBorder)
+                }
+
+                if !appState.useExternalServer {
+                    TextField("Custom models directory (optional)", text: $appState.customModelsPath)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit {
+                            appState.applyBackendSettingsChange()
+                        }
+                    Text("Leave empty to use Application Support or download on first launch.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                if EmbeddedBackendConfig.canUseEmbeddedBackend {
+                    Text("Embedded Python runtime is bundled.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Embedded runtime not found in this build. Use an external server or a Release build from build_app.sh.")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
                 }
             }
 
@@ -194,6 +260,7 @@ struct SettingsView: View {
         .onDisappear {
             appState.setVoice(appState.selectedVoiceID)
             appState.persistSettings()
+            appState.applyBackendSettingsChange()
             stopHotkeyRecording()
             SettingsWindowPresenter.restoreMenuBarActivationPolicy()
         }
@@ -258,5 +325,39 @@ struct SettingsView: View {
         if flags.contains(.shift) { result |= UInt32(shiftKey) }
         if flags.contains(.command) { result |= UInt32(cmdKey) }
         return result
+    }
+
+    private var backendStatusLabel: some View {
+        Group {
+            switch appState.backendState {
+            case .running, .external:
+                Label(appState.backendState.displayName, systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+            case .failed:
+                Label(appState.backendState.displayName, systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.red)
+            case .downloadingModels, .starting, .checkingModels:
+                Label(appState.backendState.displayName, systemImage: "arrow.triangle.2.circlepath")
+                    .foregroundStyle(.orange)
+            case .idle:
+                Text(appState.backendState.displayName)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .font(.caption)
+    }
+
+    private var modelsLocationSummary: String {
+        if let resolved = ModelManager.resolveModelsDirectory(customPath: appState.customModelsPath.nilIfEmpty)?.path {
+            return resolved
+        }
+        return ModelManager.targetModelsDirectory(customPath: appState.customModelsPath.nilIfEmpty).path
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

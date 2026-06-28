@@ -17,6 +17,7 @@
 - [x] **macOS Sonus Companion**（菜单栏 App：`SonusCompanion/`，对接 `/tts` @ `:8000`）  
 - [x] **Companion 登录自启**（`SMAppService.mainApp`）
 - [x] **Companion 文本预处理（Text Rules）** — [TEXT_RULES.md](TEXT_RULES.md)
+- [x] **Companion Embedded Backend** — App 内 spawn uvicorn + Release bundled Python runtime（见 [COMPANION.md](COMPANION.md)）
 
 ## 下一优先级（建议顺序）
 
@@ -32,7 +33,10 @@
 10. ~~**Companion 登录自启**~~（已完成：`SMAppService.mainApp`）  
 11. ~~**Companion 文本预处理（Text Rules）**~~（已完成：见 [TEXT_RULES.md](TEXT_RULES.md)）  
 12. ~~**Companion GitHub Release + 自动更新**~~（CI + 应用内 updater 已完成；待 tag `v0.2.1` 端到端验证）  
-13. **配置中心 / 多音色管理 UI**：视产品需要再开。
+13. ~~**Companion Embedded Backend**~~（已完成：`BackendManager` + `ModelManager` + `scripts/bundle-python-runtime.sh`）  
+14. **Embedded Release 发版验证**：`build_app.sh release` + 端到端 ⌥Esc（含首次模型下载）  
+15. **bundle ffmpeg**（embedded MP3 开箱即用）  
+16. **配置中心 / 多音色管理 UI**：视产品需要再开。
 
 ## Phase 2 候选（来自产品规划）
 

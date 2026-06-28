@@ -43,6 +43,11 @@ class Settings(BaseSettings):
         description="Path to Kokoro v1.1 Chinese vocab config.json",
     )
 
+    models_dir: Path | None = Field(
+        default=None,
+        description="When set, default model filenames resolve under this directory",
+    )
+
     log_level: str = Field(
         default="info",
         description="Log level: debug, info, warning, error, critical",
@@ -70,20 +75,31 @@ class Settings(BaseSettings):
         description="Use misaki en_callable for English segments in Chinese text",
     )
 
+    def resolve_models_dir(self) -> Path | None:
+        if self.models_dir is None:
+            return None
+        return self.models_dir.expanduser().resolve()
+
+    def _resolve_path(self, field_path: Path, filename: str) -> Path:
+        models_dir = self.resolve_models_dir()
+        if models_dir is not None:
+            return models_dir / filename
+        return field_path.expanduser().resolve()
+
     def resolve_model_path(self) -> Path:
-        return self.model_path.expanduser().resolve()
+        return self._resolve_path(self.model_path, "kokoro-v1.0.onnx")
 
     def resolve_voices_path(self) -> Path:
-        return self.voices_path.expanduser().resolve()
+        return self._resolve_path(self.voices_path, "voices-v1.0.bin")
 
     def resolve_zh_model_path(self) -> Path:
-        return self.zh_model_path.expanduser().resolve()
+        return self._resolve_path(self.zh_model_path, "kokoro-v1.1-zh.onnx")
 
     def resolve_zh_voices_path(self) -> Path:
-        return self.zh_voices_path.expanduser().resolve()
+        return self._resolve_path(self.zh_voices_path, "voices-v1.1-zh.bin")
 
     def resolve_zh_vocab_config_path(self) -> Path:
-        return self.zh_vocab_config_path.expanduser().resolve()
+        return self._resolve_path(self.zh_vocab_config_path, "kokoro-v1.1-zh-config.json")
 
     def resolve_cache_dir(self) -> Path:
         return self.cache_dir.expanduser().resolve()

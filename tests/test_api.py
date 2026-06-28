@@ -10,7 +10,10 @@ from conftest import MockEngine
 def test_health(api_client: TestClient) -> None:
     response = api_client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    body = response.json()
+    assert body["status"] in {"ok", "degraded"}
+    assert "models_ready" in body
+    assert isinstance(body["models_ready"], bool)
 
 
 def test_voices_includes_logical_and_native(api_client: TestClient, mock_engine: MockEngine) -> None:

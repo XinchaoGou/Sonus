@@ -4,6 +4,9 @@ import UserNotifications
 
 enum AppSettings {
     static let serverURLKey = "serverURL"
+    static let serverPortKey = "serverPort"
+    static let useExternalServerKey = "useExternalServer"
+    static let customModelsPathKey = "customModelsPath"
     static let defaultVoiceKey = "defaultVoice"
     static let defaultSpeedKey = "defaultSpeed"
     static let hotkeyConfigKey = "hotkeyConfig"
@@ -12,11 +15,44 @@ enum AppSettings {
     static let cachedVoicesKey = "cachedVoices"
 
     static let defaultServerURL = "http://127.0.0.1:8000"
+    static let defaultServerPort = 8000
     static let defaultVoiceID = "zh_female"
     static let defaultSpeedValue = 1.0
 
+    static var serverPort: Int {
+        get {
+            let value = UserDefaults.standard.integer(forKey: serverPortKey)
+            return value == 0 ? defaultServerPort : value
+        }
+        set { UserDefaults.standard.set(newValue, forKey: serverPortKey) }
+    }
+
+    static var useExternalServer: Bool {
+        get {
+            if UserDefaults.standard.object(forKey: useExternalServerKey) == nil {
+                return EmbeddedBackendConfig.prefersExternalServerByDefault
+            }
+            return UserDefaults.standard.bool(forKey: useExternalServerKey)
+        }
+        set { UserDefaults.standard.set(newValue, forKey: useExternalServerKey) }
+    }
+
+    static var customModelsPath: String {
+        get { UserDefaults.standard.string(forKey: customModelsPathKey) ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: customModelsPathKey) }
+    }
+
+    static func embeddedServerURL(port: Int = serverPort) -> String {
+        EmbeddedBackendConfig.embeddedBaseURL(port: port)
+    }
+
     static var serverURL: String {
-        get { UserDefaults.standard.string(forKey: serverURLKey) ?? defaultServerURL }
+        get {
+            if useExternalServer {
+                return UserDefaults.standard.string(forKey: serverURLKey) ?? defaultServerURL
+            }
+            return embeddedServerURL()
+        }
         set { UserDefaults.standard.set(newValue, forKey: serverURLKey) }
     }
 
@@ -100,6 +136,11 @@ final class AppState {
     var selectedVoiceID: String = AppSettings.defaultVoice
     var speed: Double = AppSettings.defaultSpeed
     var serverURL: String = AppSettings.serverURL
+    var serverPort: Int = AppSettings.serverPort
+    var useExternalServer: Bool = AppSettings.useExternalServer
+    var customModelsPath: String = AppSettings.customModelsPath
+    var backendState: BackendState = .idle
+    var backendStatusMessage: String = BackendState.idle.displayName
     var clipboardFallbackEnabled: Bool = AppSettings.clipboardFallbackEnabled
     var cacheEnabled: Bool = AppSettings.cacheEnabled
     var hotkeyConfiguration: HotkeyConfiguration = AppSettings.hotkeyConfiguration
@@ -112,6 +153,7 @@ final class AppState {
     private var usesStreamPlayback = false
     private let hotkeyManager = HotkeyManager()
     private var generationTask: Task<Void, Never>?
+    private let backendManager = BackendManager()
 
     init() {
         filePlayer.onFinished = { [weak self] in
@@ -123,12 +165,59 @@ final class AppState {
             guard self?.usesStreamPlayback == false else { return }
             self?.setError(message)
         }
+        backendManager.onStateChange = { [weak self] state in
+            self?.backendState = state
+            self?.backendStatusMessage = state.displayName
+        }
     }
 
     func startup() {
         AppLogger.log("app start")
         registerHotkey()
-        Task { await refreshVoices() }
+        Task { await startBackendAndRefreshVoices() }
+    }
+
+    func shutdown() {
+        backendManager.shutdown()
+    }
+
+    func startBackendAndRefreshVoices() async {
+        syncServerURLFromSettings()
+        let resolvedURL = await backendManager.ensureRunning(
+            useExternalServer: useExternalServer,
+            externalServerURL: externalServerURLValue(),
+            port: serverPort,
+            customModelsPath: customModelsPath.nilIfEmpty
+        )
+        serverURL = resolvedURL
+        if backendManager.state.isOperational || useExternalServer {
+            await refreshVoices()
+        }
+    }
+
+    func restartBackend() async {
+        if useExternalServer {
+            await startBackendAndRefreshVoices()
+            return
+        }
+        syncServerURLFromSettings()
+        await backendManager.restart(port: serverPort, customModelsPath: customModelsPath.nilIfEmpty)
+        serverURL = AppSettings.embeddedServerURL(port: serverPort)
+        if backendManager.state.isOperational {
+            await refreshVoices()
+        }
+    }
+
+    private func externalServerURLValue() -> String {
+        UserDefaults.standard.string(forKey: AppSettings.serverURLKey) ?? AppSettings.defaultServerURL
+    }
+
+    private func syncServerURLFromSettings() {
+        if useExternalServer {
+            serverURL = externalServerURLValue()
+        } else {
+            serverURL = AppSettings.embeddedServerURL(port: serverPort)
+        }
     }
 
     func registerHotkey() {
@@ -361,9 +450,18 @@ final class AppState {
     }
 
     func persistSettings() {
-        AppSettings.serverURL = serverURL
+        AppSettings.serverPort = serverPort
+        AppSettings.useExternalServer = useExternalServer
+        AppSettings.customModelsPath = customModelsPath
+        if useExternalServer {
+            AppSettings.serverURL = serverURL
+        }
         AppSettings.clipboardFallbackEnabled = clipboardFallbackEnabled
         AppSettings.cacheEnabled = cacheEnabled
+    }
+
+    func applyBackendSettingsChange() {
+        Task { await startBackendAndRefreshVoices() }
     }
 
     func refreshVoices() async {
@@ -409,6 +507,13 @@ final class AppState {
 
     private func showTransientError(_ message: String) {
         NotificationManager.shared.show(message: message)
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }
 

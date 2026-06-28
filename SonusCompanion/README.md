@@ -6,9 +6,12 @@ macOS menu bar app that reads selected text from any app and plays it via the lo
 
 - macOS **14.0+**
 - Xcode **15+** (tested with Xcode 26)
-- Sonus server running locally (`uv run sonus serve`, default port **8000**)
+- **Release app**: no separate server needed (embedded Python runtime + optional first-launch model download)
+- **Debug / development**: Sonus server running locally (`uv run sonus serve`, default port **8000**) — Settings → Advanced → **Use external Sonus server** (Debug default)
 
 ## Build & Run
+
+### Debug (developer — external server)
 
 ```bash
 # Terminal 1 — start TTS backend
@@ -22,6 +25,17 @@ open ~/Library/Developer/Xcode/DerivedData/SonusCompanion-*/Build/Products/Debug
 ```
 
 Or open `SonusCompanion.xcodeproj` in Xcode and press **Run**.
+
+### Release (embedded backend)
+
+```bash
+cd /path/to/Sonus/SonusCompanion
+chmod +x build_app.sh
+./build_app.sh release
+open build/DerivedData/Build/Products/Release/Sonus.app
+```
+
+Release bundles `Contents/Resources/sonus-runtime/` (Python venv). Models are downloaded on first launch to `~/Library/Application Support/Sonus/models/` unless already present.
 
 ## Release Build (local)
 

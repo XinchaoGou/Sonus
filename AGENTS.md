@@ -71,6 +71,25 @@ docker compose build && docker compose up -d
 curl -sS http://127.0.0.1:8000/health
 ```
 
+**SonusCompanion（macOS 菜单栏 App）**：
+
+```bash
+cd SonusCompanion
+xcodebuild -scheme SonusCompanion -destination 'platform=macOS' build test
+```
+
+- **验证后收尾**（必做）：编译/运行/测试完成后  
+  1. **退出 App**（`killall Sonus` 或等价方式），不要留在后台。  
+  2. **删除本次调试产物**，避免 Finder / Spotlight 里出现多份同名 `Sonus.app`：  
+     ```bash
+     killall Sonus 2>/dev/null || true
+     rm -rf ~/Library/Developer/Xcode/DerivedData/SonusCompanion-*
+     rm -rf SonusCompanion/build
+     ```  
+     若用了自定义 `-derivedDataPath`，同样 `rm -rf` 该目录。  
+- **勿安装到 `/Applications`**：不要 `cp`/`ditto`/`open` 安装到 Applications，也不要把 `.app` 复制到 Desktop、Downloads 等用户目录。用户日常安装自行从 [GitHub Releases](https://github.com/XinchaoGou/Sonus/releases) 拉最新版。  
+- **本地 release 包**（仅 CI/发版需要时）：`./build_app.sh release [version]` → `build/Sonus-macos.zip`；打包完成后同样清理 `SonusCompanion/build/`，不要自动安装 zip 里的 App。
+
 ## 协作提示（给用户复制）
 
 先阅读 README.md、AGENTS.md、docs/PRODUCT.md、docs/ARCHITECTURE.md、docs/ROADMAP.md、docs/DEVLOG.md。  

@@ -21,6 +21,7 @@
 | 013 | OpenAI /v1/audio/speech 兼容层 | 生效 |
 | 014 | 中英混排：ZHG2P + EspeakG2P en_callable | 生效 |
 | 015 | Companion Text Rules：预处理在客户端执行 | 生效 |
+| 016 | Companion Embedded Backend：子进程 uvicorn + bundled venv | 生效 |
 
 ---
 
@@ -113,3 +114,9 @@
 **上下文**：论文阅读场景需在 TTS 前去掉引用编号等噪声；规则是个人化、场景化的（正则/替换），与选区捕获强绑定。  
 **决策**：**文本预处理仅在 Sonus Companion 实现**；规则配置、Profile、Import/Export 均在 Companion Settings；HTTP `/tts` / `/tts/stream` **仍只接收最终 `text`**，MVP 不改 Python API。  
 **后果**：CLI / Docker 调用方默认无预处理；Phase 2 可选读共享 JSON 在 `TTSService` 前复用同一 schema，Companion 保持唯一配置入口。设计见 [TEXT_RULES.md](TEXT_RULES.md)。
+
+## 016 — Companion Embedded Backend（子进程 + bundled venv）
+
+**上下文**：macOS 用户希望安装 `Sonus.app` 即可朗读，无需单独 `uv run sonus serve` 或 Docker；同时保留 Hermes / curl 等 localhost HTTP 集成。  
+**决策**：Release **`Sonus.app`** 在 `Contents/Resources/sonus-runtime/` 嵌入 **uv venv**；App 通过 **`BackendManager`** spawn **`uvicorn sonus.app:app`** 子进程，仍走 **`127.0.0.1:{port}`** HTTP；**Debug 默认外连**外部服务；模型 **智能检测**（Application Support / `SONUS_MODELS_DIR` / 自定义路径）+ **按需下载**；Quit 时 **terminate 子进程**。  
+**后果**：Release 包体积增大（Python runtime ~150MB+，模型仍按需下载）；MP3 在 embedded 模式 MVP 仍依赖系统 ffmpeg（见 005）；CLI / Docker 路径继续并行维护。

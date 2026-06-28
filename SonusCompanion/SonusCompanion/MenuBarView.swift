@@ -140,6 +140,10 @@ struct MenuBarView: View {
                 }
             }
 
+            Text("Backend: \(appState.backendStatusMessage)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
             Divider()
 
             Button("Settings…") {
@@ -162,12 +166,16 @@ struct MenuBarView: View {
             Divider()
 
             Button("Quit") {
+                appState.shutdown()
                 NSApplication.shared.terminate(nil)
             }
         }
         .onAppear {
             AppUpdateController.shared.startAutomaticChecks()
             appState.startup()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
+            appState.shutdown()
         }
     }
 }
