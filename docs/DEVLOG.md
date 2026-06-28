@@ -4,6 +4,22 @@
 
 ---
 
+## 2026-06-28（Companion — v0.3.3 hotfix: sonus 未打入 bundle）
+
+### Done
+
+- **根因**：v0.3.2 runtime 用 `uv sync` 复制开发 `.venv`，`sonus` 为 editable（`sonus.pth` → CI/本机 `src/`），App 内 `ModuleNotFoundError: No module named 'sonus'`
+- **修复**：`bundle-python-runtime.sh` 独立 `.bundle-venv` + `uv sync --no-editable`；校验 `sonus.__file__` 在 bundle 内
+- **验证**：新增 `scripts/verify-embedded-runtime.sh`（import + `/health`）；`build_app.sh` / CI 发版前必跑；本机 `/Applications/Sonus.app` E2E 通过
+
+### Changed Files
+
+- `scripts/bundle-python-runtime.sh`、`scripts/verify-embedded-runtime.sh`
+- `SonusCompanion/build_app.sh`、`.github/workflows/companion-release.yml`
+- `SonusCompanion/EmbeddedBackendConfig.swift`、`CHANGELOG.md`、`Info.plist`
+
+---
+
 ## 2026-06-28（Companion — v0.3.2 hotfix: embedded runtime dyld / exit 6）
 
 ### Done

@@ -4,11 +4,18 @@ All notable changes to Sonus Companion are documented here.
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-06-28
+
+### Fixed
+
+- **Embedded runtime**: bundle `sonus` as a real wheel (`uv sync --no-editable`), not an editable `.pth` pointing at the CI workspace — fixes `ModuleNotFoundError: No module named 'sonus'` and backend never starting after v0.3.2
+- **Release verification**: `scripts/verify-embedded-runtime.sh` checks imports, framework linkage, and `GET /health` with `models_ready=true`; CI and `build_app.sh release` run it before publishing
+
 ## [0.3.2] - 2026-06-28
 
 ### Fixed
 
-- **Embedded runtime**: force uv-managed standalone CPython (`--managed-python`); reject python.org framework builds that crash with dyld exit code 6 on machines without `/Library/Frameworks/Python.framework`
+- **Embedded runtime**: force uv-managed standalone CPython (`--managed-python`); reject python.org framework builds that crash with dyld exit code 6
 - **Backend errors**: smoke-test embedded Python before spawn; surface stderr when uvicorn fails to become ready
 - **App update download**: show byte-level progress (percentage and MB) with a progress panel and Settings progress bar
 

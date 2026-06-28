@@ -63,7 +63,7 @@ enum EmbeddedBackendConfig {
         let python312 = bin.appendingPathComponent("python3.12")
         let resolved = python312.resolvingSymlinksInPath()
         if !FileManager.default.isExecutableFile(atPath: resolved.path) {
-            return "Broken Python shim at \(python312.path) → \(resolved.path). Reinstall Sonus v0.3.2+."
+            return "Broken Python shim at \(python312.path) → \(resolved.path). Reinstall Sonus v0.3.3+."
         }
         if let launchError = runtimeLaunchError() {
             return launchError
@@ -79,7 +79,16 @@ enum EmbeddedBackendConfig {
 
         let process = Process()
         process.executableURL = python
-        process.arguments = ["-c", "import sonus, uvicorn"]
+        process.arguments = [
+            "-c",
+            """
+            import os, sonus, uvicorn
+            runtime = os.environ["SONUS_RUNTIME_DIR"]
+            path = os.path.realpath(sonus.__file__)
+            if not path.startswith(os.path.realpath(runtime)):
+                raise SystemExit(f"sonus not bundled: {path}")
+            """,
+        ]
         process.standardOutput = Pipe()
         process.standardError = Pipe()
 
@@ -88,6 +97,7 @@ enum EmbeddedBackendConfig {
         if let runtime = embeddedRuntimeURL {
             let binPath = runtime.appendingPathComponent("bin").path
             environment["PATH"] = binPath + ":" + (environment["PATH"] ?? "")
+            environment["SONUS_RUNTIME_DIR"] = runtime.path
         }
         process.environment = environment
 
@@ -100,12 +110,19 @@ enum EmbeddedBackendConfig {
         process.waitUntilExit()
         guard process.terminationStatus == 0 else {
             let stderr = readPipeText(process.standardError)
+            if stderr.contains("ModuleNotFoundError: No module named 'sonus'")
+                || stderr.contains("sonus not bundled:") {
+                return """
+                Embedded backend package is missing from this build. \
+                Install Sonus v0.3.3+ from GitHub Releases or use Settings → Advanced → Use external Sonus server.
+                """
+            }
             if stderr.contains("Library not loaded")
                 || stderr.contains("Python.framework")
                 || process.terminationStatus == 6 {
                 return """
                 Embedded Python cannot load on this Mac (exit \(process.terminationStatus)). \
-                Install Sonus v0.3.2+ or enable Settings → Advanced → Use external Sonus server.
+                Install Sonus v0.3.3+ or enable Settings → Advanced → Use external Sonus server.
                 """
             }
             let detail = stderr.trimmingCharacters(in: .whitespacesAndNewlines)

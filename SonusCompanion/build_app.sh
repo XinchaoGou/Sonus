@@ -108,7 +108,8 @@ release() {
             echo "error: embedded python still links to python.org framework" >&2
             exit 1
         fi
-        "$resources_dir/bin/python3" -c "import sonus, uvicorn; print('embedded runtime ok')"
+        "$resources_dir/bin/python3" -c "import sonus, uvicorn; import os; f=sonus.__file__; assert f.startswith(os.path.realpath('${resources_dir}')), f; print('embedded runtime ok', f)"
+        bash "$REPO_ROOT/scripts/verify-embedded-runtime.sh" "$app_path"
     fi
 
     codesign --force --deep -s "$sign_identity" "$app_path"

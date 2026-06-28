@@ -4,9 +4,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUTPUT="${1:-$ROOT/SonusCompanion/build/sonus-runtime}"
+BUNDLE_VENV="${BUNDLE_VENV:-$ROOT/SonusCompanion/build/.bundle-venv}"
 
 echo "Building embedded Python runtime -> $OUTPUT"
-rm -rf "$OUTPUT"
+rm -rf "$OUTPUT" "$BUNDLE_VENV"
 
 cd "$ROOT"
 
@@ -26,14 +27,21 @@ if otool -L "$PYTHON_BIN" | grep -q '/Library/Frameworks/Python.framework/'; the
     exit 1
 fi
 
-uv sync --python "$PYTHON_BIN" --frozen 2>/dev/null || uv sync --python "$PYTHON_BIN"
+# Install into an isolated venv with sonus as a real package (not editable .pth).
+uv venv "$BUNDLE_VENV" --python "$PYTHON_BIN"
+export UV_PROJECT_ENVIRONMENT="$BUNDLE_VENV"
+uv sync --no-editable --frozen 2>/dev/null || uv sync --no-editable
 
-if [[ ! -d "$ROOT/.venv" ]]; then
-    echo "error: .venv not found after uv sync" >&2
+if [[ ! -d "$BUNDLE_VENV/lib/python3.12/site-packages/sonus" ]]; then
+    echo "error: sonus package missing from bundle venv site-packages" >&2
+    exit 1
+fi
+if [[ -f "$BUNDLE_VENV/lib/python3.12/site-packages/sonus.pth" ]]; then
+    echo "error: editable sonus.pth must not be present in release bundle" >&2
     exit 1
 fi
 
-cp -R "$ROOT/.venv" "$OUTPUT"
+cp -R "$BUNDLE_VENV/." "$OUTPUT"
 cp -R "$PYTHON_PREFIX" "$OUTPUT/python"
 
 # Rewire venv python shims to the bundled prefix (relative symlinks).
@@ -55,15 +63,25 @@ find "$OUTPUT" -type d -name "tests" -prune -exec rm -rf {} + 2>/dev/null || tru
 find "$OUTPUT" -type d -name "test" -prune -exec rm -rf {} + 2>/dev/null || true
 
 echo "Runtime ready: $OUTPUT/bin/python3"
+SONUS_FILE="$("$OUTPUT/bin/python3" -c "import sonus; print(sonus.__file__)")"
+case "$SONUS_FILE" in
+    "$OUTPUT"*) ;;
+    *)
+        echo "error: sonus resolves outside bundle: $SONUS_FILE" >&2
+        exit 1
+        ;;
+esac
 "$OUTPUT/bin/python3" -c "import sonus, uvicorn, kokoro_onnx; print('imports ok')"
 
-# Verify the bundle works when the original build-machine Python path is gone.
+# Verify the bundle works when copied to a fresh directory.
 SANDBOX="$(mktemp -d)"
 trap 'rm -rf "$SANDBOX"' EXIT
 cp -R "$OUTPUT/." "$SANDBOX/"
-"$SANDBOX/bin/python3" -c "import sys; print(sys.executable); import sonus; print('sandbox ok')"
+"$SANDBOX/bin/python3" -c "import sys; print(sys.executable); import sonus; print('sandbox ok', sonus.__file__)"
 
 if otool -L "$OUTPUT/python/bin/python3.12" | grep -q '/Library/Frameworks/Python.framework/'; then
     echo "error: bundled python3.12 still references /Library/Frameworks/Python.framework" >&2
     exit 1
 fi
+
+rm -rf "$BUNDLE_VENV"
