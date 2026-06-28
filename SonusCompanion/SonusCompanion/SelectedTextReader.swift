@@ -108,14 +108,18 @@ struct SelectedTextReader {
     }
 
     private func simulateCopyCommand() -> Bool {
-        let source = CGEventSource(stateID: .combinedSessionState)
-        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: true)
-        keyDown?.flags = .maskCommand
-        keyDown?.post(tap: .cghidEventTap)
+        guard let source = CGEventSource(stateID: .combinedSessionState) else { return false }
+        guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: true) else {
+            return false
+        }
+        keyDown.flags = .maskCommand
+        keyDown.post(tap: .cghidEventTap)
 
-        let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: false)
-        keyUp?.flags = .maskCommand
-        keyUp?.post(tap: .cghidEventTap)
+        guard let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: false) else {
+            return false
+        }
+        keyUp.flags = .maskCommand
+        keyUp.post(tap: .cghidEventTap)
 
         return true
     }

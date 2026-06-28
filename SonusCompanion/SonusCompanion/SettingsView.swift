@@ -5,6 +5,9 @@ import SwiftUI
 struct SettingsView: View {
     @Bindable var appState: AppState
     @State private var serverCheckMessage: String?
+    @State private var launchAtLoginEnabled = LaunchAtLoginManager.isRegistered
+    @State private var launchAtLoginMessage: String?
+    @State private var showTextRulesSettings = false
     @State private var isRecordingHotkey = false
     @State private var hotkeyMonitor: Any?
 
@@ -76,6 +79,21 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Text Rules") {
+                HStack {
+                    Text("Status")
+                    Spacer()
+                    Text(appState.textRuleStore.statusSummary)
+                        .foregroundStyle(.secondary)
+                }
+                Button("Manage Text Rules…") {
+                    showTextRulesSettings = true
+                }
+                Text("Preprocess selected text before TTS (citations, figure refs, etc.).")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Cache") {
                 Toggle("Enable local audio cache", isOn: $appState.cacheEnabled)
                 Button("Clear Cache") {
@@ -84,22 +102,44 @@ struct SettingsView: View {
             }
 
             Section("System") {
-                Button("Launch at Login") {}
-                    .disabled(true)
-                Text("Coming later")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Button("Install System Voice") {}
-                    .disabled(true)
-                Text("Coming later — see docs/SYSTEM_VOICE_RESEARCH.md")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Toggle("Launch at Login", isOn: $launchAtLoginEnabled)
+                    .onChange(of: launchAtLoginEnabled) { _, enabled in
+                        updateLaunchAtLogin(enabled)
+                    }
+                if LaunchAtLoginManager.needsApproval {
+                    HStack {
+                        Text("Waiting for approval in Login Items.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Open Login Items") {
+                            LaunchAtLoginManager.openLoginItemsSettings()
+                        }
+                    }
+                } else if let launchAtLoginMessage {
+                    Text(launchAtLoginMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .lineLimit(3)
+                } else if let hint = LaunchAtLoginManager.statusHint {
+                    Text(hint)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .formStyle(.grouped)
         .padding()
         .frame(width: 480)
+        .sheet(isPresented: $showTextRulesSettings) {
+            TextRulesSettingsView(
+                store: appState.textRuleStore,
+                lastSelection: Binding(
+                    get: { appState.lastSelectionText },
+                    set: { appState.lastSelectionText = $0 }
+                )
+            )
+        }
         .onDisappear {
             appState.setVoice(appState.selectedVoiceID)
             appState.persistSettings()
@@ -110,6 +150,22 @@ struct SettingsView: View {
             if !appState.isAccessibilityTrusted {
                 SelectedTextReader.requestAccessibilityPermission()
             }
+            refreshLaunchAtLoginStatus()
+        }
+    }
+
+    private func refreshLaunchAtLoginStatus() {
+        launchAtLoginEnabled = LaunchAtLoginManager.isRegistered
+        launchAtLoginMessage = LaunchAtLoginManager.statusHint
+    }
+
+    private func updateLaunchAtLogin(_ enabled: Bool) {
+        do {
+            try LaunchAtLoginManager.setEnabled(enabled)
+            launchAtLoginMessage = LaunchAtLoginManager.statusHint
+        } catch {
+            launchAtLoginMessage = error.localizedDescription
+            refreshLaunchAtLoginStatus()
         }
     }
 

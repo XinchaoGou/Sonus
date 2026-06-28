@@ -5,8 +5,9 @@
 **Sonus Companion** 是 macOS 菜单栏客户端，负责：
 
 1. 捕获任意 App 中的选中文本  
-2. 调用本地 Sonus HTTP 服务合成语音  
-3. 播放并管理播放状态  
+2. （可选）按 **Text Rules** 预处理文本 — 见 [TEXT_RULES.md](TEXT_RULES.md)  
+3. 调用本地 Sonus HTTP 服务合成语音  
+4. 播放并管理播放状态  
 
 与 Python TTS 后端解耦：Companion 只依赖稳定 HTTP 契约（当前为 `/tts`、`/voices`、`/health`）。
 
@@ -23,7 +24,8 @@ Sonus/
 ```mermaid
 flowchart LR
   User["用户选中 + 快捷键"] --> Reader["SelectedTextReader"]
-  Reader --> State["AppState"]
+  Reader --> Pre["TextPreprocessor"]
+  Pre --> State["AppState"]
   State --> Cache{缓存命中?}
   Cache -->|是| FilePlayer["AudioPlayer WAV"]
   Cache -->|否| Stream["POST /tts/stream"]
@@ -31,6 +33,8 @@ flowchart LR
   FilePlayer --> MenuBar["MenuBar 状态"]
   StreamPlayer --> MenuBar
 ```
+
+（`TextPreprocessor` 已实现；总开关关闭时 bypass，数据流与现网一致。）
 
 ## 模块
 
@@ -43,7 +47,8 @@ flowchart LR
 | `AudioPlayer` | 缓存命中时 WAV 文件播放 |
 | `StreamingAudioPlayer` | 流式 PCM 播放（`AVAudioEngine`） |
 | `HotkeyManager` | Carbon 全局热键 |
-| `SonusSystemVoiceInstaller` | Phase 2 stub |
+| `LaunchAtLoginManager` | `SMAppService.mainApp` 登录自启 |
+| `TextRuleStore` / `TextPreprocessor` | 文本规则持久化与 TTS 前 pipeline（见 [TEXT_RULES.md](TEXT_RULES.md)） |
 
 ## API 适配
 
@@ -92,6 +97,7 @@ Companion 将 `logical` 映射为 UI 列表 `{ id, name, language }`。
 |------|------|
 | 日志 | `~/Library/Logs/SonusCompanion/sonus-companion.log` |
 | 音频缓存 | `~/Library/Caches/SonusCompanion/audio/` |
+| 文本规则 | `~/Library/Application Support/SonusCompanion/text-rules.json` |
 
 ## 联调
 
@@ -105,5 +111,5 @@ curl -sS http://127.0.0.1:8000/health
 ## 后续
 
 - ~~流式播放（对接 `POST /tts/stream`）~~（已完成）  
-- System Voice（见 [SYSTEM_VOICE_RESEARCH.md](SYSTEM_VOICE_RESEARCH.md)）  
-- 登录自启  
+- ~~登录自启~~（已完成）  
+- ~~**文本预处理（Text Rules）**~~（已完成 — [TEXT_RULES.md](TEXT_RULES.md)）

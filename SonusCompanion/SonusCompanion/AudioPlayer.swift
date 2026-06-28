@@ -29,8 +29,14 @@ final class AudioPlayer: NSObject, AVAudioPlayerDelegate {
         return dir
     }
 
-    static func cacheFileURL(text: String, voice: String, speed: Double, format: String) -> URL {
-        let key = "\(text)|\(voice)|\(speed)|\(format)"
+    static func cacheFileURL(
+        text: String,
+        voice: String,
+        speed: Double,
+        format: String,
+        rulesFingerprint: String = TextPreprocessor.noopFingerprint
+    ) -> URL {
+        let key = "\(text)|\(voice)|\(speed)|\(format)|\(rulesFingerprint)"
         let hash = SHA256.hash(data: Data(key.utf8))
         let hex = hash.map { String(format: "%02x", $0) }.joined()
         return cacheDirectory.appendingPathComponent("\(hex).\(format)")

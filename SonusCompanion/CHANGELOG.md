@@ -2,6 +2,19 @@
 
 All notable changes to Sonus Companion are documented here.
 
+## [Unreleased]
+
+### Added
+
+- **Launch at Login** via `SMAppService.mainApp` (Settings toggle)
+- Pending approval hint + shortcut to System Settings → Login Items
+- **Text Rules**: TTS 前可配置正则/字面量替换；Paper / Plain / General Profile；Settings 管理 + Preview；Import/Export JSON；菜单栏 Profile 切换
+- Unit tests: `SonusCompanionTests`（`TextPreprocessor` / `TextRuleStore`）
+
+### Removed
+
+- System Voice stub (`SonusSystemVoiceInstaller`) and Settings placeholder — out of product scope
+
 ## [0.2.0] - 2026-06-27
 
 ### Added
@@ -31,9 +44,8 @@ All notable changes to Sonus Companion are documented here.
 - Settings: server URL (default `http://127.0.0.1:8000`), voice, speed, hotkey, cache, accessibility
 - File logging at `~/Library/Logs/SonusCompanion/sonus-companion.log`
 - User notifications for errors
-- Phase 2 stub: `SonusSystemVoiceInstaller`
 
 ### Notes
 
 - App Sandbox disabled (Accessibility + synthetic key events)
-- Launch at Login and System Voice install: UI placeholders only
+- Launch at Login: UI placeholder only

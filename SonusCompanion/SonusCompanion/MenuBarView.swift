@@ -63,6 +63,31 @@ struct MenuBarView: View {
                 }
             }
 
+            Text("Rules: \(appState.textRuleStore.statusSummary)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Menu("Text Rules Profile") {
+                Toggle(isOn: Binding(
+                    get: { appState.textRuleStore.rulesEnabled },
+                    set: { appState.textRuleStore.setRulesEnabled($0) }
+                )) {
+                    Text("Enable text rules")
+                }
+                Divider()
+                ForEach(appState.textRuleStore.profiles) { profile in
+                    Button {
+                        appState.textRuleStore.setActiveProfile(id: profile.id)
+                    } label: {
+                        if profile.id == appState.textRuleStore.activeProfileId {
+                            Text("✓ \(profile.name)")
+                        } else {
+                            Text(profile.name)
+                        }
+                    }
+                }
+            }
+
             Divider()
 
             Button("Settings…") {

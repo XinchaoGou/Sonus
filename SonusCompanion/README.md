@@ -40,11 +40,14 @@ Or open `SonusCompanion.xcodeproj` in Xcode and press **Run**.
 | Hotkey | ⌥Esc |
 | Clipboard fallback | On |
 | Local cache | On |
+| Launch at Login | Off (enable in Settings → System) |
+| Text rules | On · Paper Reading (Settings → Manage Text Rules) |
 
 ## Logs & Cache
 
 - Log: `~/Library/Logs/SonusCompanion/sonus-companion.log`
 - Audio cache: `~/Library/Caches/SonusCompanion/audio/`
+- Text rules: `~/Library/Application Support/SonusCompanion/text-rules.json`
 
 ## API Contract
 
@@ -55,8 +58,13 @@ Companion calls the existing Sonus endpoints:
 - `POST /tts/stream` — **primary path** (chunked PCM, play while receiving)
 - Local WAV cache on stream complete; cache hit skips network
 
-See [docs/COMPANION.md](../docs/COMPANION.md) for architecture details.
+## Build & Test
 
-## Phase 2
+```bash
+cd SonusCompanion
+xcodebuild -scheme SonusCompanion -destination 'platform=macOS' build test
+```
 
-System Voice integration is stubbed only. See [docs/SYSTEM_VOICE_RESEARCH.md](../docs/SYSTEM_VOICE_RESEARCH.md).
+See [docs/COMPANION.md](../docs/COMPANION.md) for architecture details.  
+Text rules: [docs/TEXT_RULES.md](../docs/TEXT_RULES.md).
+

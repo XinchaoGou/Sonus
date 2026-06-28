@@ -104,6 +104,8 @@ final class AppState {
     var cacheEnabled: Bool = AppSettings.cacheEnabled
     var hotkeyConfiguration: HotkeyConfiguration = AppSettings.hotkeyConfiguration
     var isAccessibilityTrusted: Bool = SelectedTextReader.isAccessibilityTrusted
+    var textRuleStore = TextRuleStore()
+    var lastSelectionText: String?
 
     private let filePlayer = AudioPlayer()
     private var streamPlayer: StreamingAudioPlayer?
@@ -161,7 +163,8 @@ final class AppState {
         let reader = SelectedTextReader(clipboardFallbackEnabled: clipboardFallbackEnabled)
         switch reader.readSelectedText() {
         case .success(let text):
-            speak(text: text)
+            lastSelectionText = text
+            speakProcessedSelection(text)
         case .failure(let error):
             if case SelectedTextError.accessibilityDenied = error, !clipboardFallbackEnabled {
                 setError(error.localizedDescription)
@@ -172,7 +175,31 @@ final class AppState {
         }
     }
 
-    func speak(text: String) {
+    private func speakProcessedSelection(_ rawText: String) {
+        let profile = textRuleStore.activeProfile
+        let enabledRuleCount = profile.rules.filter(\.enabled).count
+        let result = TextPreprocessor.process(
+            text: rawText,
+            profile: profile,
+            rulesEnabled: textRuleStore.rulesEnabled
+        ) { name, error in
+            AppLogger.log("text rule skipped: \(name) \(error)")
+        }
+
+        AppLogger.log(
+            "preprocess profile=\(profile.id) rules=\(enabledRuleCount) " +
+            "raw_len=\(rawText.count) proc_len=\(result.text.count) fingerprint=\(result.fingerprint.prefix(12))..."
+        )
+
+        guard !result.text.isEmpty else {
+            showTransientError("No speakable text after rules.")
+            return
+        }
+
+        speak(text: result.text, rulesFingerprint: result.fingerprint)
+    }
+
+    func speak(text: String, rulesFingerprint: String = TextPreprocessor.noopFingerprint) {
         generationTask?.cancel()
         stopPlaybackOnly()
         playbackState = .generating
@@ -184,7 +211,13 @@ final class AppState {
         let currentSpeed = speed
         let client = SonusClient(baseURL: serverURL)
         let useCache = cacheEnabled
-        let cacheURL = AudioPlayer.cacheFileURL(text: text, voice: voice, speed: currentSpeed, format: "wav")
+        let cacheURL = AudioPlayer.cacheFileURL(
+            text: text,
+            voice: voice,
+            speed: currentSpeed,
+            format: "wav",
+            rulesFingerprint: rulesFingerprint
+        )
 
         if useCache, AudioPlayer.cachedFileExists(at: cacheURL) {
             AppLogger.log("cache hit voice=\(voice) speed=\(currentSpeed)")

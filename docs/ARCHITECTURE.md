@@ -75,3 +75,12 @@ flowchart LR
 - 客户端应依赖：**路径**（`/tts`）、**JSON 字段语义**（`format` 为请求体别名，对应 `audio_format`）。  
 - OpenAI 兼容：**`POST /v1/audio/speech`**（字段 `input` / `model` / `voice` / `response_format`）；与 `/tts` 并存，不破坏现有客户端。  
 - OpenAPI 文档由 FastAPI 自动生成（`/docs`）。
+
+## Sonus Companion（macOS 客户端）
+
+仓库 **`SonusCompanion/`** 与 Python 后端**进程分离**，仅通过 HTTP 契约耦合。Companion 特有逻辑（选区捕获、流式播放、登录自启、**Text Rules 文本预处理**）见：
+
+- [COMPANION.md](COMPANION.md) — 模块与 API 适配  
+- [TEXT_RULES.md](TEXT_RULES.md) — TTS 前可配置替换（已实现）
+
+**约定**：Companion 发给 `/tts` / `/tts/stream` 的 `text` 已是用户意图朗读的最终字符串；服务端不做引用/索引类净化（[DECISIONS 015](DECISIONS.md#015--companion-文本预处理在客户端执行)）。

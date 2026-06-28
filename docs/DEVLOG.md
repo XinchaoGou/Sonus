@@ -4,6 +4,135 @@
 
 ---
 
+---
+
+## 2026-06-28（Companion Text Rules — Move Down 修复）
+
+### Done
+
+- 验证 **Move Down** off-by-one：Swift `move(toOffset:)` 向下移一位需 `index + 2`（移除后数组上的插入点），误用 `index + 1` 作为 `toOffset` 会无操作；若把 `index + 2` 当作 remove-then-insert 的目标索引则会移到末尾
+- **`TextRulesSettingsView`**：Move Up/Down 改走 `moveRules`，向下时使用 `index + direction + 1` 作为 `toOffset`
+- **`TextRuleStore.moveRule`**：相邻项（|Δindex|==1）用 `swapAt`，避免 remove+insert 语义混淆
+- **`TextRuleStoreTests`**：补充 reorder 回归（swap / 错误 toOffset / 越界 insert）
+
+### Changed Files
+
+- `SonusCompanion/TextRuleStore.swift`、`TextRulesSettingsView.swift`
+- `SonusCompanionTests/TextRuleStoreTests.swift`
+- `docs/DEVLOG.md`
+
+### Next
+
+- 真机回归 Text Rules 编辑顺序
+
+---
+
+## 2026-06-28（Companion Text Rules — 实现）
+
+### Done
+
+- **`TextRule` / `TextRuleProfile` / `TextRulesDocument`**：schema v1 + 内置 Paper / Plain / General Profile
+- **`TextPreprocessor`**：字面量 / 正则（含 `$1` 捕获组）、非法 pattern 跳过、规则指纹 SHA256、`noop` bypass
+- **`TextRuleStore`**：JSON 持久化 `~/Library/Application Support/SonusCompanion/text-rules.json`；Import（整文件替换）/ Export；恢复 Paper 内置默认；自定义 Profile CRUD
+- **`AppState.speakSelection()`**：预处理 → 空文本拦截 → 缓存 key 含 `rulesFingerprint`
+- **`TextRulesSettingsView`**：Settings sheet（总开关、Profile、规则 CRUD、Move Up/Down、Preview、Use last selection）
+- **菜单栏**：`Rules: On · Paper Reading` 状态 + Profile 子菜单 + 总开关 Toggle
+- **`SonusCompanionTests`**：14 项 XCTest（`xcodebuild test` **TEST SUCCEEDED**）
+
+### Changed Files
+
+- `SonusCompanion/Models/TextRule.swift`、`TextPreprocessor.swift`、`TextRuleStore.swift`、`TextRulesSettingsView.swift`
+- `SonusCompanion/AppState.swift`、`AudioPlayer.swift`、`SettingsView.swift`、`MenuBarView.swift`
+- `SonusCompanionTests/**`、`project.pbxproj`、xcscheme
+- `SonusCompanion/CHANGELOG.md`、`SonusCompanion/README.md`
+- `docs/TEXT_RULES.md`、`docs/ROADMAP.md`、`docs/COMPANION.md`、`docs/ARCHITECTURE.md`、`docs/DEVLOG.md`
+
+### Next
+
+- 真机回归：MarginNote / Preview 论文选区 + 规则 Preview 微调
+- 配置中心 / 多音色 UI（视产品需要）
+
+---
+
+## 2026-06-28（Companion Text Rules — 设计文档）
+
+### Done
+
+- 与产品方对齐 **10 项设计决策**（grill-me）：Companion 本地预处理、正则+捕获组、内置 Paper 预设、Profile、JSON 持久化、Preview、缓存指纹等
+- 新增 **[TEXT_RULES.md](TEXT_RULES.md)**：数据流、schema、内置规则表、Settings UI、实现顺序、Phase 2 边界
+- **DECISIONS 015**：预处理在客户端执行，不改 `/tts` API
+- 更新 **ROADMAP**（下一优先级 #11）、**COMPANION.md**（模块与路径）
+
+### Changed Files
+
+- `docs/TEXT_RULES.md`（新建）
+- `docs/DECISIONS.md`、`docs/ROADMAP.md`、`docs/COMPANION.md`、`docs/DEVLOG.md`
+
+### Next
+
+- 按 [TEXT_RULES.md](TEXT_RULES.md) 实现顺序在 `SonusCompanion/` 落地
+
+---
+
+## 2026-06-28（Companion bugfix：clipboard fallback）
+
+### Done
+
+- **`simulateCopyCommand()`**：`CGEventSource` / `CGEvent` 创建失败时返回 `false`，不再无条件报告成功
+- 复核 **`WAVEncoder.wrapPCM()`** RIFF 大小：`36 + dataSize` 与 WAV 规范一致，无需改动（改为 `40 + dataSize` 反而会错 4 字节）
+
+### Changed Files
+
+- `SonusCompanion/SelectedTextReader.swift`
+- `docs/DEVLOG.md`
+
+---
+
+### Done
+
+- **`LaunchAtLoginManager`**：`SMAppService.mainApp` 注册 / 注销
+- Settings → System：**Launch at Login** Toggle
+- 状态 `.requiresApproval` 时提示并在 Login Items 中批准；提供「Open Login Items」按钮
+- `xcodebuild` **BUILD SUCCEEDED**
+
+### Changed Files
+
+- `SonusCompanion/LaunchAtLoginManager.swift`（新建）
+- `SonusCompanion/SettingsView.swift`、`project.pbxproj`
+- `SonusCompanion/CHANGELOG.md`、`SonusCompanion/README.md`
+- `docs/ROADMAP.md`、`docs/COMPANION.md`、`docs/DEVLOG.md`
+
+### Notes
+
+- 需有效代码签名；未签名或 ad-hoc 构建可能无法注册（Settings 会显示错误）
+
+### Next
+
+- 真机验收登录自启 + 流式播放
+- 配置中心 / 多音色 UI（视产品需要）
+
+---
+
+## 2026-06-28（移除 System Voice 计划）
+
+### Done
+
+- 产品决定不再做 macOS System Voice（`AVSpeechSynthesisProvider*`）集成
+- 删除 `docs/SYSTEM_VOICE_RESEARCH.md`、`SonusSystemVoiceInstaller` stub 与 Settings 占位按钮
+- ROADMAP / COMPANION 后续项与 Phase 2 候选中移除 System Voice；列入「明确暂不排期」
+
+### Changed Files
+
+- 删除：`docs/SYSTEM_VOICE_RESEARCH.md`、`SonusCompanion/.../SystemVoice/SonusSystemVoiceInstaller.swift`
+- `SonusCompanion/SettingsView.swift`、`project.pbxproj`
+- `docs/ROADMAP.md`、`docs/COMPANION.md`、`SonusCompanion/README.md`、`SonusCompanion/CHANGELOG.md`
+
+### Next
+
+- ~~Companion 登录自启~~（已完成 2026-06-28）
+
+---
+
 ## 2026-06-27（Companion 流式播放）
 
 ### Done
@@ -28,7 +157,7 @@
 
 ### Next
 
-- 登录自启、System Voice
+- ~~登录自启~~（已完成 2026-06-28）
 
 ---
 
@@ -41,33 +170,31 @@
 - `AVAudioPlayer` 播放 + 本地 WAV 缓存（`~/Library/Caches/SonusCompanion/audio/`）
 - Settings：Server URL、Voice、Speed、热键、缓存、Accessibility 引导
 - 日志：`~/Library/Logs/SonusCompanion/sonus-companion.log`
-- Phase 2 stub：`SonusSystemVoiceInstaller` + [SYSTEM_VOICE_RESEARCH.md](SYSTEM_VOICE_RESEARCH.md)
+- ~~Phase 2 stub：`SonusSystemVoiceInstaller`~~（后于 2026-06-28 移除，不再做 System Voice）
 - `xcodebuild` Debug **BUILD SUCCEEDED**
 
 ### Changed Files
 
 - `SonusCompanion/**`（新建 Xcode 工程与 Swift 源码）
 - `SonusCompanion/CHANGELOG.md`、`SonusCompanion/README.md`
-- `docs/COMPANION.md`、`docs/SYSTEM_VOICE_RESEARCH.md`（新建）
-- `docs/ROADMAP.md`、`docs/DEVLOG.md`
+- `docs/COMPANION.md`、`docs/ROADMAP.md`、`docs/DEVLOG.md`
 
 ### Current Status
 
 - Companion 与 Python 后端 API 对齐（端口 8000，路径 `/tts`）
-- Launch at Login、System Voice 安装：仅占位 UI
+- Launch at Login：仅占位 UI（后于 2026-06-28 实现）
 - 播放中改 speed 仅影响下次播放（MVP 简化）
 
 ### Next
 
 - 真机验收：MarginNote / Safari / Preview + Accessibility 权限
 - Companion 流式播放（`/tts/stream`）
-- System Voice Audio Unit Extension
 
 ---
 
-### Done
+## 2026-06-13（README：Colima 登录自启）
 
-- README「Docker」小节补充 **macOS + Colima** 与 **`brew services start colima`** 说明（与 `restart: unless-stopped` 的关系）  
+### Done  
 
 ### Changed Files
 

@@ -20,6 +20,7 @@
 | 012 | Docker 多阶段镜像 + Compose | 生效 |
 | 013 | OpenAI /v1/audio/speech 兼容层 | 生效 |
 | 014 | 中英混排：ZHG2P + EspeakG2P en_callable | 生效 |
+| 015 | Companion Text Rules：预处理在客户端执行 | 生效 |
 
 ---
 
@@ -106,3 +107,9 @@
 **上下文**：v1.1 中文栈默认 `ZHG2P` 无 `en_callable` 时英文片段会被替换为 unk 或按中文误读（如「Sonus」）。  
 **决策**：新增 **`sonus.zh_g2p`**：`ZHG2P(version="1.1", en_callable=...)`；英文段用 misaki **`EspeakG2P(en-us)`** 并 **unwrap `(phonemes, meta)` 元组**；默认 **`SONUS_ZH_EN_MIXED=true`**。未引入 `misaki[en]`（spacy/torch）以保持依赖轻量。  
 **后果**：英文专名发音为 espeak 风格，略逊于完整 `en.G2P` 但可本地即用；可设 `SONUS_ZH_EN_MIXED=false` 回退旧行为。
+
+## 015 — Companion Text Rules：预处理在客户端执行
+
+**上下文**：论文阅读场景需在 TTS 前去掉引用编号等噪声；规则是个人化、场景化的（正则/替换），与选区捕获强绑定。  
+**决策**：**文本预处理仅在 Sonus Companion 实现**；规则配置、Profile、Import/Export 均在 Companion Settings；HTTP `/tts` / `/tts/stream` **仍只接收最终 `text`**，MVP 不改 Python API。  
+**后果**：CLI / Docker 调用方默认无预处理；Phase 2 可选读共享 JSON 在 `TTSService` 前复用同一 schema，Companion 保持唯一配置入口。设计见 [TEXT_RULES.md](TEXT_RULES.md)。
