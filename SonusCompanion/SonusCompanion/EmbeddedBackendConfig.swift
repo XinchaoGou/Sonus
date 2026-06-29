@@ -37,12 +37,18 @@ enum EmbeddedBackendConfig {
         }
 
         for candidate in candidates {
+            // Return the venv shim (bin/python3.12), NOT the resolved symlink target.
+            // Executing the shim lets Python read pyvenv.cfg and activate the venv,
+            // so sys.prefix points at the venv root and site-packages resolves to
+            // <runtime>/lib/python3.12/site-packages (where sonus lives).
+            // Resolving symlinks here would run <runtime>/python/bin/python3.12
+            // directly, which uses the bundled prefix and cannot find sonus.
+            guard FileManager.default.isExecutableFile(atPath: candidate.path) else { continue }
             let resolved = candidate.resolvingSymlinksInPath()
-            guard FileManager.default.isExecutableFile(atPath: resolved.path) else { continue }
             guard resolved.path.hasPrefix(runtime.path) || resolved.path.contains("/sonus-runtime/python/") else {
                 continue
             }
-            return resolved
+            return candidate
         }
         return nil
     }
@@ -93,6 +99,9 @@ enum EmbeddedBackendConfig {
         process.standardError = Pipe()
 
         var environment = ProcessInfo.processInfo.environment
+        environment.removeValue(forKey: "PYTHONPATH")
+        environment.removeValue(forKey: "PYTHONHOME")
+        environment.removeValue(forKey: "PYTHONDONTWRITEBYTECODE")
         environment["PYTHONUNBUFFERED"] = "1"
         if let runtime = embeddedRuntimeURL {
             let binPath = runtime.appendingPathComponent("bin").path
@@ -100,6 +109,7 @@ enum EmbeddedBackendConfig {
             environment["SONUS_RUNTIME_DIR"] = runtime.path
         }
         process.environment = environment
+        process.currentDirectoryURL = URL(fileURLWithPath: "/")
 
         do {
             try process.run()

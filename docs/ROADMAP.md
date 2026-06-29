@@ -34,7 +34,7 @@
 11. ~~**Companion 文本预处理（Text Rules）**~~（已完成：见 [TEXT_RULES.md](TEXT_RULES.md)）  
 12. ~~**Companion GitHub Release + 自动更新**~~（CI + 应用内 updater 已完成；待 tag `v0.2.1` 端到端验证）  
 13. ~~**Companion Embedded Backend**~~（已完成：`BackendManager` + `ModelManager` + `scripts/bundle-python-runtime.sh`）  
-14. **Embedded Release 发版验证**：`build_app.sh release` + 端到端 ⌥Esc（含首次模型下载）  
+14. ~~**Embedded Release 发版验证**~~（v0.3.4 修复 venv shim 后 embedded backend 端到端通过：`/health` `models_ready=true` + `POST /tts` WAV）  
 15. **bundle ffmpeg**（embedded MP3 开箱即用）  
 16. **配置中心 / 多音色管理 UI**：视产品需要再开。
 

@@ -44,6 +44,7 @@ final class BackendManager {
     private var process: Process?
     private var spawnedByApp = false
     private var startupTask: Task<Void, Never>?
+    private var recentBackendOutput: String = ""
 
     var onStateChange: ((BackendState) -> Void)?
 
@@ -140,12 +141,11 @@ final class BackendManager {
         if ready {
             updateState(.running)
         } else {
-            let stderr = drainProcessOutput(process)
+            let detail = recentBackendOutput.trimmingCharacters(in: .whitespacesAndNewlines)
             stopSpawnedProcess()
-            if !stderr.isEmpty {
-                AppLogger.log("embedded backend stderr: \(stderr)")
+            if !detail.isEmpty {
+                AppLogger.log("embedded backend not ready, output: \(detail)")
             }
-            let detail = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             if detail.isEmpty {
                 updateState(.failed("Embedded backend did not become ready on port \(port)."))
             } else {
@@ -172,6 +172,12 @@ final class BackendManager {
         ]
 
         var environment = ProcessInfo.processInfo.environment
+        // Embedded venv is self-contained: drop host-side Python overrides that
+        // can make the bundled interpreter look outside the bundle and fail to
+        // import sonus (e.g. PYTHONPATH pointing at a dev checkout).
+        environment.removeValue(forKey: "PYTHONPATH")
+        environment.removeValue(forKey: "PYTHONHOME")
+        environment.removeValue(forKey: "PYTHONDONTWRITEBYTECODE")
         environment["PYTHONUNBUFFERED"] = "1"
         environment["SONUS_HOST"] = "127.0.0.1"
         environment["SONUS_PORT"] = String(port)
@@ -182,19 +188,32 @@ final class BackendManager {
         if let runtime = EmbeddedBackendConfig.embeddedRuntimeURL {
             let binPath = runtime.appendingPathComponent("bin").path
             environment["PATH"] = binPath + ":" + (environment["PATH"] ?? "")
+            environment["SONUS_RUNTIME_DIR"] = runtime.path
         }
 
         process.environment = environment
         process.currentDirectoryURL = modelsDirectory.deletingLastPathComponent()
 
-        process.standardOutput = Pipe()
-        process.standardError = Pipe()
+        let stdoutPipe = Pipe()
+        let stderrPipe = Pipe()
+        process.standardOutput = stdoutPipe
+        process.standardError = stderrPipe
+
+        // Stream subprocess output into the app log so failures are diagnosable
+        // even when the process exits before the health-check timeout fires.
+        startStreamingPipe(stdoutPipe, prefix: "backend stdout")
+        startStreamingPipe(stderrPipe, prefix: "backend stderr")
 
         process.terminationHandler = { [weak self] proc in
             Task { @MainActor in
                 guard let self else { return }
                 if self.spawnedByApp, proc.terminationStatus != 0, self.state == .running || self.state == .starting {
-                    self.updateState(.failed("Backend exited unexpectedly (code \(proc.terminationStatus))."))
+                    let tail = self.recentBackendOutput
+                    if tail.isEmpty {
+                        self.updateState(.failed("Backend exited unexpectedly (code \(proc.terminationStatus))."))
+                    } else {
+                        self.updateState(.failed("Backend exited unexpectedly (code \(proc.terminationStatus)): \(tail)"))
+                    }
                 }
                 if self.process === proc {
                     self.process = nil
@@ -206,17 +225,56 @@ final class BackendManager {
         try process.run()
         self.process = process
         spawnedByApp = true
-        AppLogger.log("embedded backend spawned pid=\(process.processIdentifier) port=\(port)")
+        recentBackendOutput = ""
+        AppLogger.log("embedded backend spawned pid=\(process.processIdentifier) port=\(port) python=\(python.path)")
+    }
+
+    private static let outputByteCap = 8_000
+
+    private func startStreamingPipe(_ pipe: Pipe, prefix: String) {
+        pipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
+            let data = handle.availableData
+            guard !data.isEmpty else {
+                handle.readabilityHandler = nil
+                return
+            }
+            let text = String(data: data, encoding: .utf8) ?? "<\(data.count) bytes>"
+            Task { @MainActor in
+                self?.appendBackendOutput(text, prefix: prefix)
+            }
+        }
+    }
+
+    private func appendBackendOutput(_ text: String, prefix: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        AppLogger.log("\(prefix): \(trimmed)")
+        let combined = recentBackendOutput.isEmpty ? trimmed : (recentBackendOutput + "\n" + trimmed)
+        if combined.count > Self.outputByteCap {
+            recentBackendOutput = String(combined.suffix(Self.outputByteCap))
+        } else {
+            recentBackendOutput = combined
+        }
     }
 
     private func stopSpawnedProcess() {
         guard let process else { return }
+        detachPipes(process)
         if process.isRunning {
             process.terminate()
             AppLogger.log("embedded backend terminate pid=\(process.processIdentifier)")
         }
         self.process = nil
         spawnedByApp = false
+    }
+
+    private func detachPipes(_ process: Process) {
+        if let pipe = process.standardOutput as? Pipe {
+            pipe.fileHandleForReading.readabilityHandler = nil
+        }
+        if let pipe = process.standardError as? Pipe {
+            pipe.fileHandleForReading.readabilityHandler = nil
+        }
     }
 
     private func waitForHealthyServer(baseURL: String, timeoutSeconds: TimeInterval) async -> Bool {
@@ -256,22 +314,6 @@ final class BackendManager {
         state = newState
         onStateChange?(newState)
         AppLogger.log("backend state: \(newState.displayName)")
-    }
-
-    private func drainProcessOutput(_ process: Process?) -> String {
-        guard let process else { return "" }
-        let stdout = readPipeText(process.standardOutput)
-        let stderr = readPipeText(process.standardError)
-        return [stdout, stderr]
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-            .joined(separator: "\n")
-    }
-
-    private func readPipeText(_ handle: Any?) -> String {
-        guard let pipe = handle as? Pipe else { return "" }
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        return String(data: data, encoding: .utf8) ?? ""
     }
 }
 

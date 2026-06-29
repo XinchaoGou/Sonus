@@ -4,6 +4,30 @@
 
 ---
 
+## 2026-06-28（Companion — v0.3.4 fix: embedded backend venv shim）
+
+### Done
+
+- **根因**：`EmbeddedBackendConfig.resolvePythonExecutable` 对 `bin/python3.12` 调用 `resolvingSymlinksInPath()` 后返回 **`python/bin/python3.12`**（bundled 解释器），而非 venv shim。直接执行 bundled 解释器时 Python 以 `python/` 为 `sys.prefix`，**不读 `pyvenv.cfg`、不激活 venv**，`site-packages` 解析到 `python/lib/python3.12/site-packages`（只有 pip），找不到 `sonus` → `ModuleNotFoundError` → smoke test `exit 1` → `Backend exited unexpectedly (code 1)`。
+- **修复**：`resolvePythonExecutable` 返回 venv shim `bin/python3.12`（不 resolve symlink），只在校验时用 resolved 路径确认指向 bundle 内。执行 shim 让 Python 读 `pyvenv.cfg` 激活 venv，`sys.prefix = sonus-runtime/`，site-packages 落在 `lib/python3.12/site-packages`（含 sonus）。
+- **诊断增强**：
+  - `BackendManager.spawnBackend` 异步流式读取子进程 stdout/stderr 写入 app log（`backend stderr: ...`），进程秒退时不再丢失错误。
+  - `terminationHandler` 在 `code != 0` 时附 `recentBackendOutput` 摘要到失败消息。
+  - spawn 前清理 `PYTHONPATH`/`PYTHONHOME`/`PYTHONDONTWRITEBYTECODE`，避免宿主环境污染 embedded venv。
+  - `runtimeLaunchError()` 同样清理环境，并设 `currentDirectoryURL = /`，使 smoke test 与 spawn 行为一致。
+- **验证**：本地 release build + `verify-embedded-runtime` 全过；`/Applications/Sonus.app` 启动后 backend `Running`，`/health` `models_ready=true`，`POST /tts` 返回 WAV。
+
+### Changed Files
+
+- `SonusCompanion/SonusCompanion/EmbeddedBackendConfig.swift`、`BackendManager.swift`
+- `SonusCompanion/CHANGELOG.md`、`docs/DEVLOG.md`、`docs/ROADMAP.md`
+
+### Next
+
+- 推 tag **v0.3.4** 发版；用户升级后 embedded backend 应直接可用。
+
+---
+
 ## 2026-06-28（Companion — v0.3.3 hotfix: sonus 未打入 bundle）
 
 ### Done

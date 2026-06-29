@@ -4,6 +4,14 @@ All notable changes to Sonus Companion are documented here.
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-06-28
+
+### Fixed
+
+- **Embedded backend never starts (`Backend exited unexpectedly (code 1)`)**: `resolvePythonExecutable` returned the symlink target `python/bin/python3.12` instead of the venv shim `bin/python3.12`, so Python ran with the bundled prefix and could not activate the venv — `site-packages` resolved to `python/lib/python3.12/site-packages` (only pip) and `import sonus` failed. Now returns the shim so Python reads `pyvenv.cfg` and `site-packages` lands on `lib/python3.12/site-packages` where `sonus` is installed.
+- **Backend diagnostics**: `BackendManager` now streams subprocess stdout/stderr into the app log in real time and includes the captured output in the failure message when uvicorn exits before the health-check timeout (previously stderr was discarded on fast exits).
+- **Environment hygiene**: drop `PYTHONPATH`/`PYTHONHOME`/`PYTHONDONTWRITEBYTECODE` from the spawned Python process so host-side overrides cannot steer the embedded venv.
+
 ## [0.3.3] - 2026-06-28
 
 ### Fixed
