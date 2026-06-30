@@ -4,6 +4,18 @@ All notable changes to Sonus Companion are documented here.
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-06-30
+
+### Fixed
+
+- **Port race crash on engine switch (exit code 1)**: `BackendManager` now waits for the old backend process to fully exit (SIGTERM → waitUntilExit → SIGKILL escalation) and probes port 8000 is free before spawning a new uvicorn. Eliminates `[Errno 48] address already in use` → "Backend exited unexpectedly" right after switching to Qwen3.
+- **Qwen MPS synthesis-time crashes**: `generate_custom_voice` failures on MPS now trigger an automatic CPU reload + single retry (previously only `from_pretrained` failures fell back to CPU).
+- **Incomplete Qwen unload**: model is moved to CPU and `torch.mps.synchronize()` + `empty_cache()` run before dropping the reference, so MPS memory is actually reclaimed during hot-switch.
+
+### Added
+
+- `SONUS_QWEN_DEVICE` environment variable (`cpu` / `mps` / `cuda` / `auto`) to force the Qwen3-TTS device and bypass unstable MPS drivers.
+
 ## [0.4.2] - 2026-06-30
 
 ### Fixed
