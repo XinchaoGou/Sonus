@@ -18,8 +18,15 @@ enum AppSettings {
     static let defaultServerURL = "http://127.0.0.1:8000"
     static let defaultServerPort = 8000
     static let defaultEngineID = "kokoro"
+    /// Engines the current app build can spawn locally.
+    static let supportedEngineIDs: Set<String> = ["kokoro"]
     static let defaultVoiceID = "zh_female"
     static let defaultSpeedValue = 1.0
+
+    /// Reset stale UserDefaults (e.g. removed qwen3-tts after v0.5.0).
+    static func normalizeActiveEngine(_ engineID: String) -> String {
+        supportedEngineIDs.contains(engineID) ? engineID : defaultEngineID
+    }
 
     static var serverPort: Int {
         get {
@@ -45,8 +52,15 @@ enum AppSettings {
     }
 
     static var activeEngine: String {
-        get { UserDefaults.standard.string(forKey: activeEngineKey) ?? defaultEngineID }
-        set { UserDefaults.standard.set(newValue, forKey: activeEngineKey) }
+        get {
+            let stored = UserDefaults.standard.string(forKey: activeEngineKey) ?? defaultEngineID
+            let normalized = normalizeActiveEngine(stored)
+            if normalized != stored {
+                UserDefaults.standard.set(normalized, forKey: activeEngineKey)
+            }
+            return normalized
+        }
+        set { UserDefaults.standard.set(normalizeActiveEngine(newValue), forKey: activeEngineKey) }
     }
 
     static func embeddedServerURL(port: Int = serverPort) -> String {
@@ -183,8 +197,18 @@ final class AppState {
 
     func startup() {
         AppLogger.log("app start")
+        migrateStoredEngineIfNeeded()
         registerHotkey()
         Task { await startBackendAndRefreshVoices() }
+    }
+
+    /// UserDefaults may still reference a removed engine after an in-app update.
+    private func migrateStoredEngineIfNeeded() {
+        let normalized = AppSettings.normalizeActiveEngine(activeEngine)
+        guard normalized != activeEngine else { return }
+        AppLogger.log("migrated activeEngine \(activeEngine) -> \(normalized)")
+        activeEngine = normalized
+        AppSettings.activeEngine = normalized
     }
 
     func shutdown() {

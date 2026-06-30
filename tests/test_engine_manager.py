@@ -59,3 +59,18 @@ def test_engine_manager_rebuilds_cache_engine_id(kokoro_ready_settings: Settings
     monkeypatch.setattr("sonus.factory.build_engine", lambda settings: MockEngine())
     manager = EngineManager(kokoro_ready_settings)
     assert manager.tts.engine_id == "kokoro"
+
+
+def test_settings_falls_back_removed_engine(kokoro_ready_settings: Settings) -> None:
+    settings = Settings(**{**kokoro_ready_settings.model_dump(), "engine": "qwen3-tts"})
+    assert settings.engine == "kokoro"
+
+
+def test_engine_manager_starts_with_removed_engine(
+    kokoro_ready_settings: Settings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    settings = kokoro_ready_settings.model_copy(update={"engine": "qwen3-tts"})
+    monkeypatch.setattr("sonus.factory.build_engine", lambda s: MockEngine())
+    manager = EngineManager(settings)
+    assert manager.active_engine_id == "kokoro"
+    assert settings.engine == "kokoro"

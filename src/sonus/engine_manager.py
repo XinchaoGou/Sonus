@@ -41,6 +41,7 @@ class EngineManager:
 
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
+        settings.ensure_supported_engine()
         self._lock = threading.RLock()
         self._cond = threading.Condition(self._lock)
         self._synthesis_count = 0

@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-06-30（修复 v0.5.0 升级后 activeEngine 残留 qwen3-tts 导致启动崩溃）
+
+### Done
+
+- **根因**：用户 UserDefaults 仍保存 `activeEngine=qwen3-tts`（升级前选的引擎）。v0.5.0 移除 Qwen 后 Companion 仍把 `SONUS_ENGINE=qwen3-tts` 传给 embedded 后端 → `ValueError: Unsupported SONUS_ENGINE: 'qwen3-tts'` → 后端 exit 3，Settings 里连续报错。
+- **Companion**：`AppSettings.normalizeActiveEngine` + getter 写入时自动迁移；`AppState.startup()` 再兜底一次并写日志。
+- **Python**：`Settings` 校验未知 `SONUS_ENGINE` 时回退 `kokoro`；`EngineManager.__init__` 调用 `ensure_supported_engine()` 防止 Settings 被 copy 未重验时仍崩溃。
+- **测试**：`test_settings_falls_back_removed_engine`、`test_engine_manager_starts_with_removed_engine`。
+- **本机**：已将 `defaults write com.sonus.app activeEngine kokoro`。
+
+### Changed Files
+
+- `SonusCompanion/SonusCompanion/AppState.swift`
+- `src/sonus/config.py`、`src/sonus/engine_manager.py`
+- `tests/test_engine_manager.py`
+- `docs/DEVLOG.md`
+
+### Next
+
+- 发 v0.5.1 patch；用户无需手动改 defaults，启动即自动迁移
+
+---
+
 ## 2026-06-30（撤回 Qwen3-TTS 引擎 — 单引擎回归）
 
 ### Done

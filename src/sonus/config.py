@@ -2,8 +2,11 @@
 
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing_extensions import Self
+
+from sonus.engine_manifest import load_engine_manifest
 
 
 class Settings(BaseSettings):
@@ -80,6 +83,18 @@ class Settings(BaseSettings):
         ge=1.0,
         description="Max seconds to wait for in-flight synthesis before engine switch fails",
     )
+
+    @model_validator(mode="after")
+    def normalize_engine(self) -> Self:
+        """Fall back to kokoro when SONUS_ENGINE points at a removed/unknown id."""
+        manifest = load_engine_manifest()
+        if manifest.get(self.engine) is None:
+            self.engine = "kokoro"
+        return self
+
+    def ensure_supported_engine(self) -> None:
+        """Normalize in-place (e.g. when Settings was copied without re-validation)."""
+        self.normalize_engine()
 
     def resolve_models_dir(self) -> Path | None:
         if self.models_dir is None:

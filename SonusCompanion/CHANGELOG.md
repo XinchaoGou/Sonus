@@ -4,6 +4,12 @@ All notable changes to Sonus Companion are documented here.
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-06-30
+
+### Fixed
+
+- **Startup crash after upgrading from Qwen builds**: UserDefaults could still have `activeEngine=qwen3-tts`, which made the embedded backend exit with `Unsupported SONUS_ENGINE`. Companion now migrates stale engine ids to Kokoro on launch; Python also falls back unknown `SONUS_ENGINE` values to `kokoro`.
+
 ## [0.5.0] - 2026-06-30
 
 ### Removed
