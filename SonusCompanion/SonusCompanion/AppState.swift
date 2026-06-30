@@ -193,6 +193,15 @@ final class AppState {
 
     func startBackendAndRefreshVoices() async {
         syncServerURLFromSettings()
+        if !useExternalServer, activeEngine == "qwen3-tts" {
+            let modelsRoot = ModelManager.targetModelsDirectory(customPath: customModelsPath.nilIfEmpty)
+            if !QwenAddonManager.isInstalled() || !QwenModelManager.isReady(in: modelsRoot) {
+                AppLogger.log("qwen3-tts selected but components missing; falling back to kokoro")
+                activeEngine = AppSettings.defaultEngineID
+                AppSettings.activeEngine = activeEngine
+                engineSwitchMessage = "Qwen3 components are not installed. Using Kokoro."
+            }
+        }
         let resolvedURL = await backendManager.ensureRunning(
             useExternalServer: useExternalServer,
             externalServerURL: externalServerURLValue(),
@@ -499,6 +508,13 @@ final class AppState {
         engineSwitchMessage = nil
         stop()
 
+        let previousEngine = engines.first(where: { $0.active })?.id ?? activeEngine
+        if let serverActive = engines.first(where: { $0.active })?.id,
+           serverActive == engineID,
+           backendManager.state.isOperational || useExternalServer {
+            return
+        }
+
         if engineID == "qwen3-tts", !useExternalServer {
             do {
                 try await ensureQwenComponentsReady()
@@ -514,20 +530,49 @@ final class AppState {
             }
         }
 
-        let client = SonusClient(baseURL: serverURL, timeoutSeconds: 120)
-        do {
-            let active = try await client.setActiveEngine(engineID)
-            activeEngine = active
-            AppSettings.activeEngine = active
+        if useExternalServer {
+            let client = SonusClient(baseURL: serverURL, timeoutSeconds: 120)
+            do {
+                let active = try await client.setActiveEngine(engineID)
+                activeEngine = active
+                AppSettings.activeEngine = active
+                await refreshEngines()
+                await refreshVoices()
+                engineSwitchMessage = "Active engine: \(active)"
+                AppLogger.log("engine switched to \(active)")
+            } catch {
+                let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                engineSwitchMessage = message
+                activeEngine = previousEngine
+                AppLogger.log("engine switch failed: \(message)")
+            }
+            return
+        }
+
+        // Embedded backend: restart the Python process instead of hot-switching.
+        // Loading Qwen (PyTorch/MPS) in the same process as Kokoro (ONNX) is fragile
+        // and often crashes due to memory pressure or MPS allocator issues.
+        activeEngine = engineID
+        AppSettings.activeEngine = engineID
+        await restartBackend()
+
+        if backendManager.state.isOperational {
             await refreshEngines()
             await refreshVoices()
-            engineSwitchMessage = "Active engine: \(active)"
-            AppLogger.log("engine switched to \(active)")
-        } catch {
-            let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-            engineSwitchMessage = message
-            AppLogger.log("engine switch failed: \(message)")
+            engineSwitchMessage = "Active engine: \(engineID)"
+            AppLogger.log("engine switched to \(engineID) via backend restart")
+            return
         }
+
+        AppLogger.log("engine switch restart failed; reverting to \(previousEngine)")
+        activeEngine = previousEngine
+        AppSettings.activeEngine = previousEngine
+        await restartBackend()
+        await refreshEngines()
+        if let active = engines.first(where: { $0.active }) {
+            activeEngine = active.id
+        }
+        engineSwitchMessage = backendStatusMessage
     }
 
     func refreshVoices() async {
@@ -570,8 +615,8 @@ final class AppState {
         engineSwitchMessage = nil
         do {
             try await ensureQwenComponentsReady()
-            engineSwitchMessage = "Qwen3 components ready."
             await restartBackend()
+            engineSwitchMessage = "Qwen3 components ready."
         } catch {
             engineSwitchMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }
@@ -583,7 +628,6 @@ final class AppState {
 
     private func ensureQwenComponentsReady() async throws {
         let modelsRoot = ModelManager.targetModelsDirectory(customPath: customModelsPath.nilIfEmpty)
-        var addonInstalled = false
 
         if !QwenAddonManager.isInstalled() {
             try await QwenAddonManager.downloadAndInstall { [weak self] progress, message in
@@ -592,7 +636,6 @@ final class AppState {
                     self?.backendStatusMessage = message
                 }
             }
-            addonInstalled = true
         }
 
         if !QwenModelManager.isReady(in: modelsRoot) {
@@ -602,10 +645,6 @@ final class AppState {
                     self?.backendStatusMessage = message
                 }
             }
-        }
-
-        if addonInstalled {
-            await restartBackend()
         }
     }
 

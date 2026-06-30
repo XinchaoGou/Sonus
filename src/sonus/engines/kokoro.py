@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gc
 from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any
@@ -151,3 +152,4 @@ class KokoroEngine:
         self._kokoro_v1 = None
         self._kokoro_zh = None
         self._zh_g2p = None
+        gc.collect()

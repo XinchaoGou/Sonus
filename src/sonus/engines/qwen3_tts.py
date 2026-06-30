@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gc
 import logging
 from pathlib import Path
 
@@ -68,15 +69,39 @@ class Qwen3TTSEngine:
             dtype = torch.float32
 
         logger.info("loading Qwen3-TTS from %s (device=%s)", self._model_dir, device_map)
-        self._model = Qwen3TTSModel.from_pretrained(
-            str(self._model_dir),
-            device_map=device_map,
-            dtype=dtype,
-        )
+        try:
+            self._model = Qwen3TTSModel.from_pretrained(
+                str(self._model_dir),
+                device_map=device_map,
+                dtype=dtype,
+            )
+        except Exception as exc:
+            if device_map == "mps":
+                logger.warning(
+                    "Qwen3-TTS MPS load failed (%s); falling back to CPU",
+                    exc,
+                )
+                self._model = Qwen3TTSModel.from_pretrained(
+                    str(self._model_dir),
+                    device_map="cpu",
+                    dtype=torch.float32,
+                )
+            else:
+                raise
         return self._model
 
     def unload(self) -> None:
         self._model = None
+        gc.collect()
+        try:
+            import torch
+
+            if torch.backends.mps.is_available():
+                torch.mps.empty_cache()
+            elif torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except ImportError:
+            pass
 
     def synthesize(
         self,

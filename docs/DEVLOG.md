@@ -4,6 +4,33 @@
 
 ---
 
+## 2026-06-30（Qwen 引擎切换稳定性）
+
+### Done
+
+- **Companion 引擎切换**：embedded 模式不再走 `PUT /engines/active` 热切换，改为 **restart backend**（`SONUS_ENGINE` + 干净进程），避免 Kokoro ONNX 与 Qwen PyTorch/MPS 同进程共存导致崩溃
+- **启动兜底**：若 UserDefaults 为 `qwen3-tts` 但 addon/模型未就绪，自动回退 Kokoro 并提示
+- **Python 内存释放**：`Qwen3TTSEngine.unload()` 增加 `gc.collect()` + `torch.mps/cuda.empty_cache()`；MPS 加载失败时回退 CPU
+- **`EngineManager` / Kokoro `unload`**：切换后触发 `gc.collect()`
+
+### Changed Files
+
+- `SonusCompanion/SonusCompanion/AppState.swift`
+- `src/sonus/engines/qwen3_tts.py`、`src/sonus/engines/kokoro.py`、`src/sonus/engine_manager.py`
+- `docs/DEVLOG.md`
+
+### Next
+
+- 发版验证 Companion 切换 Qwen3 ↔ Kokoro 不再 backend 秒退
+
+### Verification
+
+- `pytest`：**82 passed**（含 `tests/test_qwen_engine_stability.py` 5 项：unload 计数、往返切换、可选依赖拒绝、gc、MPS→CPU 回退）
+- `scripts/simulate-qwen-engine-switch.sh`：热切换 + 进程重启 + 2 轮快速重启循环，全部 TTS WAV 通过（本机 Application Support 模型 + qwen-addon）
+- `xcodebuild -scheme SonusCompanion build test`：通过
+
+---
+
 ## 2026-06-30（Companion Release — Lite 包 + Qwen 按需下载）
 
 ### Done

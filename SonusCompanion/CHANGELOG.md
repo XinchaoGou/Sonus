@@ -4,6 +4,19 @@ All notable changes to Sonus Companion are documented here.
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-06-30
+
+### Fixed
+
+- **Qwen engine switch stability**: embedded Companion restarts the backend on engine change instead of hot-switching in-process (avoids Kokoro + PyTorch/MPS crashes)
+- **Startup fallback**: if Qwen3 components are missing but Qwen was previously selected, fall back to Kokoro on launch
+- **Memory cleanup**: Qwen/Kokoro `unload()` + `gc.collect()`; MPS load failure falls back to CPU
+
+### Added
+
+- `scripts/simulate-qwen-engine-switch.sh` for local engine-switch regression
+- `tests/test_qwen_engine_stability.py`
+
 ## [0.4.1] - 2026-06-30
 
 ### Added

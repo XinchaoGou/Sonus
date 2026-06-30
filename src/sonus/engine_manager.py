@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import gc
 import threading
 import time
 from dataclasses import dataclass
@@ -142,6 +143,7 @@ class EngineManager:
         unload = getattr(engine, "unload", None)
         if callable(unload):
             unload()
+        gc.collect()
 
 
 def _check_optional_dependency(spec: EngineSpec) -> None:
