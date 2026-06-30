@@ -12,17 +12,8 @@ KOKORO_LOGICAL: dict[str, VoiceProfile] = {
     "ja_female": VoiceProfile(engine_voice="jf_alpha", lang="ja"),
 }
 
-QWEN3_LOGICAL: dict[str, VoiceProfile] = {
-    "zh_female": VoiceProfile(engine_voice="serena", lang="Chinese"),
-    "zh_male": VoiceProfile(engine_voice="uncle_fu", lang="Chinese"),
-    "en_female": VoiceProfile(engine_voice="vivian", lang="English"),
-    "en_male": VoiceProfile(engine_voice="ryan", lang="English"),
-    "ja_female": VoiceProfile(engine_voice="ono_anna", lang="Japanese"),
-}
-
 ENGINE_LOGICAL_MAP: dict[str, dict[str, VoiceProfile]] = {
     "kokoro": KOKORO_LOGICAL,
-    "qwen3-tts": QWEN3_LOGICAL,
 }
 
 

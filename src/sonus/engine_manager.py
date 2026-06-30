@@ -126,8 +126,6 @@ class EngineManager:
                     f"Engine {engine_id!r} is not ready; missing: {', '.join(missing)}"
                 )
 
-            _check_optional_dependency(spec)
-
             logger.info("switching engine %s -> %s", self._active_engine_id, engine_id)
             self._unload_engine(self._engine)
 
@@ -144,20 +142,6 @@ class EngineManager:
         if callable(unload):
             unload()
         gc.collect()
-
-
-def _check_optional_dependency(spec: EngineSpec) -> None:
-    if not spec.optional_dependency:
-        return
-    if spec.optional_dependency == "qwen":
-        try:
-            import qwen_tts  # noqa: F401
-        except ImportError as exc:
-            raise EngineSwitchError(
-                "Qwen3-TTS requires optional dependencies. "
-                "In Sonus Companion, download Qwen3 components in Settings → Backend, "
-                "or run: uv sync --extra qwen"
-            ) from exc
 
 
 def _total_required_assets(spec: EngineSpec) -> int:

@@ -1,4 +1,4 @@
-# Shared engine registry (Python control plane; Companion mirrors download URLs).
+# Shared engine registry (Python control plane).
 engines:
   kokoro:
     name: Kokoro
@@ -15,12 +15,3 @@ engines:
         url: https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/voices-v1.1-zh.bin
       - filename: kokoro-v1.1-zh-config.json
         url: https://huggingface.co/hexgrad/Kokoro-82M-v1.1-zh/raw/main/config.json
-
-  qwen3-tts:
-    name: Qwen3-TTS
-    optional_dependency: qwen
-    openai_model_aliases: [qwen3-tts, qwen-tts]
-    huggingface_repo: Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice
-    model_subdir: qwen3-tts
-    readiness_files:
-      - config.json

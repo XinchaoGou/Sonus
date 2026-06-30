@@ -23,12 +23,6 @@ dependencies = [
 [project.scripts]
 sonus = "sonus.cli:main"
 
-[project.optional-dependencies]
-qwen = [
-    "qwen-tts>=0.1.1",
-    "huggingface_hub>=0.36.0",
-]
-
 [build-system]
 requires = ["uv_build>=0.11.17,<0.12.0"]
 build-backend = "uv_build"

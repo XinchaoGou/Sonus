@@ -190,9 +190,6 @@ final class BackendManager {
         environment.removeValue(forKey: "PYTHONHOME")
         environment.removeValue(forKey: "PYTHONDONTWRITEBYTECODE")
         environment["PYTHONUNBUFFERED"] = "1"
-        if QwenAddonManager.isInstalled() {
-            environment["PYTHONPATH"] = QwenAddonManager.sitePackagesURL.path
-        }
         environment["SONUS_HOST"] = "127.0.0.1"
         environment["SONUS_PORT"] = String(port)
         environment["SONUS_MODELS_DIR"] = modelsDirectory.path
@@ -287,7 +284,7 @@ final class BackendManager {
     /// (and the OS has had a chance to release port 8000). Escalates to SIGKILL
     /// if a graceful SIGTERM does not land within ``timeout`` seconds.
     ///
-    /// This is the key fix for the "switch to Qwen -> backend exits with code 1"
+    /// This is the key fix for the "engine switch -> backend exits with code 1"
     /// crash: previously we fired ``terminate()`` and immediately spawned a new
     /// uvicorn, which raced the old one for the port and failed with
     /// ``[Errno 48] address already in use``.

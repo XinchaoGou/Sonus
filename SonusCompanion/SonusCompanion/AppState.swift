@@ -193,15 +193,6 @@ final class AppState {
 
     func startBackendAndRefreshVoices() async {
         syncServerURLFromSettings()
-        if !useExternalServer, activeEngine == "qwen3-tts" {
-            let modelsRoot = ModelManager.targetModelsDirectory(customPath: customModelsPath.nilIfEmpty)
-            if !QwenAddonManager.isInstalled() || !QwenModelManager.isReady(in: modelsRoot) {
-                AppLogger.log("qwen3-tts selected but components missing; falling back to kokoro")
-                activeEngine = AppSettings.defaultEngineID
-                AppSettings.activeEngine = activeEngine
-                engineSwitchMessage = "Qwen3 components are not installed. Using Kokoro."
-            }
-        }
         let resolvedURL = await backendManager.ensureRunning(
             useExternalServer: useExternalServer,
             externalServerURL: externalServerURLValue(),
@@ -515,21 +506,6 @@ final class AppState {
             return
         }
 
-        if engineID == "qwen3-tts", !useExternalServer {
-            do {
-                try await ensureQwenComponentsReady()
-            } catch {
-                let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                engineSwitchMessage = message
-                AppLogger.log("qwen setup failed: \(message)")
-                await refreshEngines()
-                if let active = engines.first(where: { $0.active }) {
-                    activeEngine = active.id
-                }
-                return
-            }
-        }
-
         if useExternalServer {
             let client = SonusClient(baseURL: serverURL, timeoutSeconds: 120)
             do {
@@ -549,9 +525,8 @@ final class AppState {
             return
         }
 
-        // Embedded backend: restart the Python process instead of hot-switching.
-        // Loading Qwen (PyTorch/MPS) in the same process as Kokoro (ONNX) is fragile
-        // and often crashes due to memory pressure or MPS allocator issues.
+        // Embedded backend: restart the Python process instead of hot-switching,
+        // so the active engine loads in a clean process with fresh resources.
         activeEngine = engineID
         AppSettings.activeEngine = engineID
         await restartBackend()
@@ -609,43 +584,6 @@ final class AppState {
 
     func clearCache() {
         AudioPlayer.clearCache()
-    }
-
-    func downloadQwenComponents() async {
-        engineSwitchMessage = nil
-        do {
-            try await ensureQwenComponentsReady()
-            await restartBackend()
-            engineSwitchMessage = "Qwen3 components ready."
-        } catch {
-            engineSwitchMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-        }
-    }
-
-    var qwenAddonInstalled: Bool {
-        QwenAddonManager.isInstalled()
-    }
-
-    private func ensureQwenComponentsReady() async throws {
-        let modelsRoot = ModelManager.targetModelsDirectory(customPath: customModelsPath.nilIfEmpty)
-
-        if !QwenAddonManager.isInstalled() {
-            try await QwenAddonManager.downloadAndInstall { [weak self] progress, message in
-                Task { @MainActor in
-                    self?.backendState = .downloadingModels(progress: progress, message: message)
-                    self?.backendStatusMessage = message
-                }
-            }
-        }
-
-        if !QwenModelManager.isReady(in: modelsRoot) {
-            try await QwenModelManager.downloadModel(into: modelsRoot) { [weak self] progress, message in
-                Task { @MainActor in
-                    self?.backendState = .downloadingModels(progress: progress, message: message)
-                    self?.backendStatusMessage = message
-                }
-            }
-        }
     }
 
     private func setError(_ message: String) {

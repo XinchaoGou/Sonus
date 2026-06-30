@@ -41,15 +41,12 @@ jobs:
       - name: Verify release zip
         run: |
           test -f SonusCompanion/build/Sonus-macos.zip
-          test -f SonusCompanion/build/Sonus-qwen-addon.zip
           unzip -l SonusCompanion/build/Sonus-macos.zip | grep -F 'Sonus.app/Contents/MacOS/Sonus'
           unzip -l SonusCompanion/build/Sonus-macos.zip | grep -F 'Sonus.app/Contents/Resources/sonus-runtime/bin/python3'
           if unzip -l SonusCompanion/build/Sonus-macos.zip | grep -qi 'site-packages/torch/'; then
-            echo "error: lite release must not bundle torch (use Sonus-qwen-addon.zip)" >&2
+            echo "error: release must not bundle torch" >&2
             exit 1
           fi
-          unzip -l SonusCompanion/build/Sonus-qwen-addon.zip | grep -F 'site-packages/torch/'
-          unzip -l SonusCompanion/build/Sonus-qwen-addon.zip | grep -F 'manifest.json'
           unzip -p SonusCompanion/build/Sonus-macos.zip 'Sonus.app/Contents/Resources/sonus-runtime/python/bin/python3.12' > /tmp/embedded-python3.12
           chmod +x /tmp/embedded-python3.12
           ! otool -L /tmp/embedded-python3.12 | grep -q '/Library/Frameworks/Python.framework/'
@@ -62,19 +59,16 @@ jobs:
         with:
           files: |
             SonusCompanion/build/Sonus-macos.zip
-            SonusCompanion/build/Sonus-qwen-addon.zip
           generate_release_notes: true
           append_body: true
           body: |
             ## Install (macOS)
 
-            1. Download **`Sonus-macos.zip`** (~120 MB, Kokoro only)
+            1. Download **`Sonus-macos.zip`** (~120 MB, Kokoro TTS runtime)
             2. Unzip and drag **`Sonus.app`** to **`/Applications`**
             3. Open **Sonus** — if Gatekeeper blocks it, use **System Settings → Privacy & Security → Open Anyway**
             4. Grant **Accessibility** for selected-text capture
             5. On first launch, allow **model download** in Settings → Backend (or point to an existing `models/` directory in Advanced)
-
-            **Qwen3-TTS (optional):** In Settings → Backend, switch engine to **Qwen3-TTS** — the app downloads **`Sonus-qwen-addon.zip`** (~250 MB Python deps) and the Qwen model (~1.7 GB) on demand. Or download `Sonus-qwen-addon.zip` manually from this release.
 
             This release includes an **embedded TTS backend** — no separate `sonus serve` or Docker required for the menu bar app. External agents can still use `http://127.0.0.1:8000` while Sonus is running.
 

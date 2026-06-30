@@ -4,6 +4,17 @@ All notable changes to Sonus Companion are documented here.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-30
+
+### Removed
+
+- **Qwen3-TTS engine removed**: PyTorch + 0.6B weights made the install / on-demand download too heavy (~250 MB addon + ~1.7 GB model) and MPS inference was unstable. Sonus is back to a single Kokoro engine.
+  - Deleted `QwenAddonManager`, `QwenModelManager`, `scripts/download-qwen3-model.sh`, `scripts/bundle-qwen-addon.sh`, `scripts/simulate-qwen-engine-switch.sh`, `src/sonus/engines/qwen3_tts.py`, `tests/test_qwen_engine_stability.py`.
+  - Removed `qwen` optional dependency group from `pyproject.toml`; `uv.lock` no longer pulls torch / transformers / qwen-tts.
+  - Settings → Backend: removed the **Qwen3-TTS** picker option, **Qwen3 runtime** row, and **Download Qwen3 Components…** button.
+  - Release ships a single `Sonus-macos.zip` (~120 MB); `Sonus-qwen-addon.zip` is no longer produced.
+  - Multi-engine infrastructure (`EngineManager`, `/engines`, `PUT /engines/active`, `engine_manifest.yaml`) is retained for future engines; the manifest now registers only Kokoro.
+
 ## [0.4.4] - 2026-06-30
 
 ### Fixed

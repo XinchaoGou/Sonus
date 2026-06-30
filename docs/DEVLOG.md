@@ -4,6 +4,36 @@
 
 ---
 
+## 2026-06-30（撤回 Qwen3-TTS 引擎 — 单引擎回归）
+
+### Done
+
+- **背景**：Qwen3-TTS 上线后实际体验偏卡——PyTorch + 0.6B 权重让安装包 / 按需下载膨胀（addon ~250MB + 模型 ~1.7GB），MPS 推理不稳定需要 CPU 回退，embedded 切换引擎还需进程重启。与首阶段「小体积、低延迟、Apple Silicon 友好」冲突。
+- **Python**：删除 `src/sonus/engines/qwen3_tts.py`；`factory.py` 去掉 qwen3-tts 分支；`engine_manifest.yaml` 移除 `qwen3-tts` 条目；`voice_registry.py` 删除 `QWEN3_LOGICAL`；`model_status.py` 删除 `missing_qwen3_model_files`；`config.py` 删除 `qwen3_model_dir` / `resolve_qwen3_model_dir`；`engine_manager.py` 删除仅服务于 qwen 的 `_check_optional_dependency`。
+- **依赖**：`pyproject.toml` 移除 `[project.optional-dependencies] qwen`；`uv lock` 重新生成，torch / torchaudio / transformers / qwen-tts / safetensors / tokenizers 等数十个传递依赖一并移除。
+- **测试**：删除 `tests/test_qwen_engine_stability.py`；`test_engine_manager.py` 改为断言 `qwen3-tts` 不在 `/engines`；`test_voices.py` 删除 qwen3 逻辑音色用例。
+- **脚本**：删除 `scripts/download-qwen3-model.sh` / `simulate-qwen-engine-switch.sh` / `bundle-qwen-addon.sh`；`scripts/bundle-python-runtime.sh` 去掉 `qwen_tts` 警告检查。
+- **Companion**：删除 `QwenAddonManager.swift` / `QwenModelManager.swift`；`project.pbxproj` 移除两个文件引用；`AppState.swift` 去掉启动 qwen 兜底、`downloadQwenComponents`、`qwenAddonInstalled`、`ensureQwenComponentsReady`、`switchActiveEngine` 的 qwen 分支；`SettingsView.swift` 去掉 Qwen3-TTS Picker 项、Qwen3 runtime 区块、Download 按钮、engineLabel 的 qwen 判断；`BackendManager.swift` 去掉 `QwenAddonManager.isInstalled()` 的 PYTHONPATH 注入。
+- **CI / 打包**：`.github/workflows/companion-release.yml` 去掉 addon 校验、asset 上传与说明中的 Qwen3 段；`SonusCompanion/build_app.sh` 去掉 `SKIP_QWEN_ADDON` 与 addon 构建步骤。
+- **保留**：`EngineManager` / `/engines` / `PUT /engines/active` / `engine_manifest.yaml` 骨架与按 `engine_id` 的缓存 key——通用多引擎基建，不占运行时开销，未来引入新引擎直接在 manifest 注册即可。
+
+### Changed Files
+
+- `src/sonus/engines/qwen3_tts.py`（删）、`src/sonus/factory.py`、`src/sonus/engine_manifest.yaml`、`src/sonus/voice_registry.py`、`src/sonus/model_status.py`、`src/sonus/config.py`、`src/sonus/engine_manager.py`
+- `pyproject.toml`、`uv.lock`
+- `tests/test_qwen_engine_stability.py`（删）、`tests/test_engine_manager.py`、`tests/test_voices.py`
+- `scripts/download-qwen3-model.sh`（删）、`scripts/simulate-qwen-engine-switch.sh`（删）、`scripts/bundle-qwen-addon.sh`（删）、`scripts/bundle-python-runtime.sh`
+- `SonusCompanion/SonusCompanion/QwenAddonManager.swift`（删）、`QwenModelManager.swift`（删）、`AppState.swift`、`SettingsView.swift`、`BackendManager.swift`、`SonusCompanion.xcodeproj/project.pbxproj`、`SonusCompanion/build_app.sh`、`SonusCompanion/CHANGELOG.md`
+- `.github/workflows/companion-release.yml`
+- `README.md`、`docs/ARCHITECTURE.md`、`docs/COMPANION.md`、`docs/ROADMAP.md`、`docs/DECISIONS.md`、`docs/DEVLOG.md`
+
+### Next
+
+- 真机回归：重新打包 Companion，确认 Settings 只剩 Kokoro、启动顺滑、包体积回到 ~120MB
+- 未来引入新引擎（如 Piper）时复用现有多引擎骨架，新增 `DECISIONS` 记录
+
+---
+
 ## 2026-06-30（v0.4.4 — 孤儿后端收割 + 版本号注入修复）
 
 ### Done

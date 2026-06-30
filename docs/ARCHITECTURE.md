@@ -31,8 +31,7 @@ Sonus/
     ├── cli.py               # Typer：serve、tts
     └── engines/
         ├── base.py          # TTSEngine Protocol、SynthesisResult
-        ├── kokoro.py        # KokoroEngine（懒加载 Kokoro）
-        └── qwen3_tts.py     # Qwen3-TTS CustomVoice（可选 qwen-tts）
+        └── kokoro.py        # KokoroEngine（懒加载 Kokoro）
 ```
 
 ## 请求路径（HTTP）
@@ -71,7 +70,7 @@ flowchart LR
 | log_level | `SONUS_LOG_LEVEL` | `debug` / `info` / `warning` / `error` / `critical` |
 | max_chunk_chars | `SONUS_MAX_CHUNK_CHARS` | 长文本切分；`0` 禁用 |
 | cache | `SONUS_CACHE_*` | 磁盘 hash 缓存；TTL 可选 |
-| engine | `SONUS_ENGINE` | 当前 `kokoro` 或 `qwen3-tts`（可运行中 `PUT /engines/active` 热切换） |
+| engine | `SONUS_ENGINE` | 当前仅 `kokoro`（多引擎骨架已就位，注册表里只挂 Kokoro；可运行中 `PUT /engines/active` 但无第二引擎可切） |
 | zh_en_mixed | `SONUS_ZH_EN_MIXED` | 中文句内英文走 espeak G2P |
 | 模型路径 | `SONUS_MODEL_PATH` / `SONUS_VOICES_PATH` | 相对路径相对**进程 cwd**，一般为项目根 |
 

@@ -4,7 +4,6 @@ from sonus.cache import AudioCache
 from sonus.config import Settings
 from sonus.engines.base import TTSEngine
 from sonus.engines.kokoro import KokoroEngine
-from sonus.engines.qwen3_tts import Qwen3TTSEngine
 from sonus.service import TTSService
 
 
@@ -19,8 +18,6 @@ def build_engine(settings: Settings) -> TTSEngine:
             zh_vocab_config_path=settings.resolve_zh_vocab_config_path(),
             zh_en_mixed=settings.zh_en_mixed,
         )
-    if settings.engine == "qwen3-tts":
-        return Qwen3TTSEngine(settings.resolve_qwen3_model_dir())
     raise ValueError(f"Unsupported SONUS_ENGINE: {settings.engine!r}")
 
 

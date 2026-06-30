@@ -35,15 +35,15 @@
 12. ~~**Companion GitHub Release + 自动更新**~~（CI + 应用内 updater 已完成；待 tag `v0.2.1` 端到端验证）  
 13. ~~**Companion Embedded Backend**~~（已完成：`BackendManager` + `ModelManager` + `scripts/bundle-python-runtime.sh`）  
 14. ~~**Embedded Release 发版验证**~~（v0.3.4 修复 venv shim 后 embedded backend 端到端通过：`/health` `models_ready=true` + `POST /tts` WAV）  
-15. **bundle ffmpeg**（embedded MP3 开箱即用）  
-16. ~~**多引擎热切换 + Qwen3-TTS**~~（已完成：`EngineManager` + `/engines` + `qwen3-tts` 引擎；见 [DECISIONS 017](DECISIONS.md#017--多引擎热切换--qwen3-tts)）  
-17. ~~**Companion Lite Release + Qwen 按需下载**~~（已完成：lite `Sonus-macos.zip` + `Sonus-qwen-addon.zip` + Settings 下载 UI）  
+15. **bundle ffmpeg**（embedded MP3 开箱即用）
+16. ~~**多引擎热切换 + Qwen3-TTS**~~（已撤回：Qwen3-TTS 因体积大、MPS 不稳定而移除；`EngineManager` / `/engines` 骨架保留待未来引擎，见 [DECISIONS 018](DECISIONS.md#018--撤回-qwen3-tts-引擎)）
+17. ~~**Companion Lite Release + Qwen 按需下载**~~（已撤回：Qwen3 移除后 Release 回到单一 Kokoro 包）
 18. **配置中心 / 多音色管理 UI**：视产品需要再开。
 
 ## Phase 2 候选（来自产品规划）
 
 - **Text Rules 服务端/CLI 复用**（Companion 仍为配置入口；可选读共享 JSON）  
-- ~~多引擎运行时切换~~（第一版：`kokoro` ↔ `qwen3-tts`，见 DECISIONS 017）  
+- ~~多引擎运行时切换~~（Qwen3-TTS 已撤回，见 DECISIONS 018；`EngineManager` 骨架保留，未来引入新引擎时再启用）
 - 更高质量模型评估（Piper 等）— 每引入一引擎一条 `DECISIONS` 记录  
 
 ## 明确暂不排期

@@ -74,9 +74,6 @@ case "$SONUS_REAL" in
         ;;
 esac
 "$OUTPUT/bin/python3" -c "import sonus, uvicorn, kokoro_onnx; print('imports ok')"
-if "$OUTPUT/bin/python3" -c "import qwen_tts" 2>/dev/null; then
-    echo "warn: qwen_tts is bundled; lite release should omit --extra qwen" >&2
-fi
 
 # Verify the bundle works when copied to a fresh directory.
 SANDBOX="$(mktemp -d)"

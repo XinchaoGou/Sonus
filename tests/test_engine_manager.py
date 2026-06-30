@@ -30,7 +30,7 @@ def test_list_engines_endpoint(api_client) -> None:
     body = response.json()
     ids = {item["id"] for item in body}
     assert "kokoro" in ids
-    assert "qwen3-tts" in ids
+    assert "qwen3-tts" not in ids
 
 
 def test_health_includes_engine(api_client) -> None:

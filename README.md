@@ -80,7 +80,7 @@ curl -L -o models/kokoro-v1.1-zh-config.json \
 |------|------|------|
 | `SONUS_HOST` | HTTP 绑定地址 | `127.0.0.1` |
 | `SONUS_PORT` | HTTP 端口 | `8000` |
-| `SONUS_ENGINE` | 引擎 id（`kokoro` / `qwen3-tts`；可运行中 `PUT /engines/active` 切换） | `kokoro` |
+| `SONUS_ENGINE` | 引擎 id（当前仅 `kokoro`） | `kokoro` |
 | `SONUS_LOG_LEVEL` | 日志级别 | `info`（可选 `debug` / `warning` / `error` / `critical`） |
 | `SONUS_MAX_CHUNK_CHARS` | 长文本切分上限（字符）；`0` 关闭 | `280` |
 | `SONUS_CACHE_ENABLED` | 是否启用磁盘音频缓存 | `true` |
@@ -92,28 +92,8 @@ curl -L -o models/kokoro-v1.1-zh-config.json \
 | `SONUS_ZH_VOICES_PATH` | Kokoro v1.1 中文 voices | `models/voices-v1.1-zh.bin` |
 | `SONUS_ZH_VOCAB_CONFIG_PATH` | v1.1 中文 config.json | `models/kokoro-v1.1-zh-config.json` |
 | `SONUS_ZH_EN_MIXED` | 中文句内英文片段走 espeak G2P（`en_callable`） | `true` |
-| `SONUS_QWEN3_MODEL_DIR` | Qwen3-TTS HF 快照目录 | `models/qwen3-tts`（或 `{SONUS_MODELS_DIR}/qwen3-tts`） |
 
 可选：在项目根放置 `.env`（已被 `pydantic-settings` 读取）。
-
-### Qwen3-TTS（可选第二引擎）
-
-```bash
-# 安装可选依赖（含 PyTorch + qwen-tts）
-uv sync --extra qwen
-
-# 下载 0.6B CustomVoice 权重（约 1.7GB）
-./scripts/download-qwen3-model.sh
-
-# 启动并切换
-uv run --extra qwen sonus serve
-curl -sS http://127.0.0.1:8000/engines
-curl -sS -X PUT http://127.0.0.1:8000/engines/active \
-  -H 'Content-Type: application/json' \
-  -d '{"engine":"qwen3-tts"}'
-```
-
-Companion Settings → **Engine** 可在运行时切换；冷启动默认引擎由 `SONUS_ENGINE` / UserDefaults 决定。
 
 ## 启动服务
 
