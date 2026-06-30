@@ -55,6 +55,21 @@ struct SettingsView: View {
                 }
 
                 if !appState.useExternalServer {
+                    LabeledContent("Qwen3 runtime") {
+                        Text(appState.qwenAddonInstalled ? "Installed" : "Not installed (~250 MB)")
+                            .foregroundStyle(.secondary)
+                    }
+                    if !appState.qwenAddonInstalled {
+                        Button("Download Qwen3 Components…") {
+                            Task { await appState.downloadQwenComponents() }
+                        }
+                        Text("Required for Qwen3-TTS engine. Downloads Python deps and the Qwen model (~1.7 GB).")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                if !appState.useExternalServer {
                     Stepper(value: $appState.serverPort, in: 1024...65535) {
                         Text("Port: \(appState.serverPort)")
                     }
@@ -377,6 +392,9 @@ struct SettingsView: View {
     }
 
     private func engineLabel(_ engine: EngineStatusResponse) -> String {
+        if engine.id == "qwen3-tts", !appState.qwenAddonInstalled {
+            return "\(engine.name) (runtime not installed)"
+        }
         if engine.ready {
             return engine.name
         }

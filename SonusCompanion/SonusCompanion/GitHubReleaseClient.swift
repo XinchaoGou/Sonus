@@ -85,4 +85,29 @@ enum GitHubReleaseClient {
             releaseNotes: release.body?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         )
     }
+
+    static func fetchAssetDownloadURL(
+        assetName: String,
+        tag: String,
+        session: URLSession = .shared
+    ) async throws -> URL {
+        let url = URL(string: "https://api.github.com/repos/\(UpdateConfig.repoOwner)/\(UpdateConfig.repoName)/releases/tags/\(tag)")!
+        var request = URLRequest(url: url)
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        request.setValue("Sonus-Companion", forHTTPHeaderField: "User-Agent")
+
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw Error.invalidResponse
+        }
+        guard (200..<300).contains(http.statusCode) else {
+            throw Error.httpStatus(http.statusCode)
+        }
+
+        let release = try JSONDecoder().decode(GitHubRelease.self, from: data)
+        guard let asset = release.assets.first(where: { $0.name == assetName }) else {
+            throw Error.missingAsset(assetName)
+        }
+        return asset.browserDownloadURL
+    }
 }

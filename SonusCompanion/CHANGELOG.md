@@ -4,6 +4,18 @@ All notable changes to Sonus Companion are documented here.
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-06-30
+
+### Added
+
+- **Lite Release**: `Sonus-macos.zip` bundles Kokoro runtime only (~120 MB)
+- **Qwen on-demand**: `Sonus-qwen-addon.zip` (~224 MB) downloaded from GitHub Releases when switching to Qwen3-TTS or via Settings → **Download Qwen3 Components…**
+- Qwen model snapshot (~1.7 GB) downloaded automatically with the addon flow
+
+### Changed
+
+- Embedded runtime no longer includes PyTorch / `qwen-tts` by default; addon installs to `~/Library/Application Support/Sonus/qwen-addon/` and is injected via `PYTHONPATH`
+
 ## [0.4.0] - 2026-06-30
 
 ### Added
@@ -11,7 +23,7 @@ All notable changes to Sonus Companion are documented here.
 - **Multi-engine TTS**: runtime hot-switch between **Kokoro** and **Qwen3-TTS** (0.6B CustomVoice) via `GET /engines` and `PUT /engines/active`
 - Settings → **Engine** picker; cold start uses `SONUS_ENGINE` from UserDefaults / spawn env
 - `scripts/download-qwen3-model.sh` for Qwen3 Hugging Face snapshot (~1.7GB)
-- Embedded runtime bundles optional `qwen-tts` dependencies (`uv sync --extra qwen`)
+- Embedded runtime bundles optional `qwen-tts` dependencies (`uv sync --extra qwen`) — **superseded in next release by Lite + on-demand addon**
 
 ### Changed
 

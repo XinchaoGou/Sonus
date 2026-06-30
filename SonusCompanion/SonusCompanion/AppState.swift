@@ -498,6 +498,22 @@ final class AppState {
     func switchActiveEngine(to engineID: String) async {
         engineSwitchMessage = nil
         stop()
+
+        if engineID == "qwen3-tts", !useExternalServer {
+            do {
+                try await ensureQwenComponentsReady()
+            } catch {
+                let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                engineSwitchMessage = message
+                AppLogger.log("qwen setup failed: \(message)")
+                await refreshEngines()
+                if let active = engines.first(where: { $0.active }) {
+                    activeEngine = active.id
+                }
+                return
+            }
+        }
+
         let client = SonusClient(baseURL: serverURL, timeoutSeconds: 120)
         do {
             let active = try await client.setActiveEngine(engineID)
@@ -548,6 +564,49 @@ final class AppState {
 
     func clearCache() {
         AudioPlayer.clearCache()
+    }
+
+    func downloadQwenComponents() async {
+        engineSwitchMessage = nil
+        do {
+            try await ensureQwenComponentsReady()
+            engineSwitchMessage = "Qwen3 components ready."
+            await restartBackend()
+        } catch {
+            engineSwitchMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        }
+    }
+
+    var qwenAddonInstalled: Bool {
+        QwenAddonManager.isInstalled()
+    }
+
+    private func ensureQwenComponentsReady() async throws {
+        let modelsRoot = ModelManager.targetModelsDirectory(customPath: customModelsPath.nilIfEmpty)
+        var addonInstalled = false
+
+        if !QwenAddonManager.isInstalled() {
+            try await QwenAddonManager.downloadAndInstall { [weak self] progress, message in
+                Task { @MainActor in
+                    self?.backendState = .downloadingModels(progress: progress, message: message)
+                    self?.backendStatusMessage = message
+                }
+            }
+            addonInstalled = true
+        }
+
+        if !QwenModelManager.isReady(in: modelsRoot) {
+            try await QwenModelManager.downloadModel(into: modelsRoot) { [weak self] progress, message in
+                Task { @MainActor in
+                    self?.backendState = .downloadingModels(progress: progress, message: message)
+                    self?.backendStatusMessage = message
+                }
+            }
+        }
+
+        if addonInstalled {
+            await restartBackend()
+        }
     }
 
     private func setError(_ message: String) {

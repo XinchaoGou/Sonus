@@ -30,7 +30,7 @@ fi
 # Install into an isolated venv with sonus as a real package (not editable .pth).
 uv venv "$BUNDLE_VENV" --python "$PYTHON_BIN"
 export UV_PROJECT_ENVIRONMENT="$BUNDLE_VENV"
-uv sync --no-editable --frozen --extra qwen 2>/dev/null || uv sync --no-editable --extra qwen
+uv sync --no-editable --frozen 2>/dev/null || uv sync --no-editable
 
 if [[ ! -d "$BUNDLE_VENV/lib/python3.12/site-packages/sonus" ]]; then
     echo "error: sonus package missing from bundle venv site-packages" >&2
@@ -74,7 +74,9 @@ case "$SONUS_REAL" in
         ;;
 esac
 "$OUTPUT/bin/python3" -c "import sonus, uvicorn, kokoro_onnx; print('imports ok')"
-"$OUTPUT/bin/python3" -c "import qwen_tts; print('qwen_tts ok')" 2>/dev/null || echo "warn: qwen_tts not importable in bundle"
+if "$OUTPUT/bin/python3" -c "import qwen_tts" 2>/dev/null; then
+    echo "warn: qwen_tts is bundled; lite release should omit --extra qwen" >&2
+fi
 
 # Verify the bundle works when copied to a fresh directory.
 SANDBOX="$(mktemp -d)"

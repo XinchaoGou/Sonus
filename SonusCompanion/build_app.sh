@@ -26,6 +26,7 @@ Environment:
   CONFIGURATION      Xcode configuration (default: Release)
   DEVELOPER_ID       Optional codesign identity for Developer ID builds
   SKIP_RUNTIME       Set to 1 to skip embedding Python (local UI-only builds)
+  SKIP_QWEN_ADDON    Set to 1 to skip building Sonus-qwen-addon.zip
 EOF
 }
 
@@ -116,6 +117,11 @@ release() {
 
     rm -f "$zip_path"
     COPYFILE_DISABLE=1 ditto -c -k --keepParent --norsrc "$app_path" "$zip_path"
+
+    if [[ "${SKIP_QWEN_ADDON:-0}" != "1" ]]; then
+        echo "Building Qwen addon zip (on-demand install)..."
+        bash "$REPO_ROOT/scripts/bundle-qwen-addon.sh" "$BUILD_DIR/Sonus-qwen-addon.zip"
+    fi
 
     echo "OK: $zip_path"
     echo "Bundle: $(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$app_path/Contents/Info.plist")"

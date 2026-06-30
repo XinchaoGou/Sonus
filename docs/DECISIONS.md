@@ -126,4 +126,4 @@
 
 **上下文**：Phase 2 需要 Kokoro 之外的可切换引擎；Companion / Agent 应通过 HTTP 管理面切换，且保持 `/tts` 契约稳定；音频缓存需按引擎隔离。  
 **决策**：引入 **`EngineManager`**（单引擎驻留、排空 in-flight 后热切换）、共享 **`engine_manifest.yaml`**、`GET /engines` + `PUT /engines/active`；第二引擎为 **Qwen3-TTS 0.6B CustomVoice**（可选依赖 `uv sync --extra qwen`）；逻辑音色仍用 `zh_female` 等，按引擎映射；OpenAI `model` 字段校验 active 引擎；Companion spawn 注入 `SONUS_ENGINE`，运行中切换走 API。  
-**后果**：Qwen3 权重约 1.7GB，首包合成冷启动慢；`speed` 在 Qwen3 侧暂忽略；embedded runtime 打包需 `--extra qwen`（体积显著增大）；缓存 key 已含 `engine_id`（见 011）。
+**后果**：Qwen3 权重约 1.7GB，首包合成冷启动慢；`speed` 在 Qwen3 侧暂忽略；Companion Release **默认 Lite 包**（仅 Kokoro 依赖，~120MB zip），Qwen PyTorch 依赖通过 **`Sonus-qwen-addon.zip`** 按需下载至 `~/Library/Application Support/Sonus/qwen-addon/` 并以 `PYTHONPATH` 注入 embedded runtime；缓存 key 已含 `engine_id`（见 011）。

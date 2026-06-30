@@ -152,7 +152,9 @@ def _check_optional_dependency(spec: EngineSpec) -> None:
             import qwen_tts  # noqa: F401
         except ImportError as exc:
             raise EngineSwitchError(
-                "Qwen3-TTS requires optional dependencies: uv sync --extra qwen"
+                "Qwen3-TTS requires optional dependencies. "
+                "In Sonus Companion, download Qwen3 components in Settings → Backend, "
+                "or run: uv sync --extra qwen"
             ) from exc
 
 

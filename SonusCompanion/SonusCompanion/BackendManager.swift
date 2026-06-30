@@ -180,6 +180,9 @@ final class BackendManager {
         environment.removeValue(forKey: "PYTHONHOME")
         environment.removeValue(forKey: "PYTHONDONTWRITEBYTECODE")
         environment["PYTHONUNBUFFERED"] = "1"
+        if QwenAddonManager.isInstalled() {
+            environment["PYTHONPATH"] = QwenAddonManager.sitePackagesURL.path
+        }
         environment["SONUS_HOST"] = "127.0.0.1"
         environment["SONUS_PORT"] = String(port)
         environment["SONUS_MODELS_DIR"] = modelsDirectory.path

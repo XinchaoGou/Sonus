@@ -37,7 +37,8 @@
 14. ~~**Embedded Release 发版验证**~~（v0.3.4 修复 venv shim 后 embedded backend 端到端通过：`/health` `models_ready=true` + `POST /tts` WAV）  
 15. **bundle ffmpeg**（embedded MP3 开箱即用）  
 16. ~~**多引擎热切换 + Qwen3-TTS**~~（已完成：`EngineManager` + `/engines` + `qwen3-tts` 引擎；见 [DECISIONS 017](DECISIONS.md#017--多引擎热切换--qwen3-tts)）  
-17. **配置中心 / 多音色管理 UI**：视产品需要再开。
+17. ~~**Companion Lite Release + Qwen 按需下载**~~（已完成：lite `Sonus-macos.zip` + `Sonus-qwen-addon.zip` + Settings 下载 UI）  
+18. **配置中心 / 多音色管理 UI**：视产品需要再开。
 
 ## Phase 2 候选（来自产品规划）
 

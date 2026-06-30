@@ -4,6 +4,30 @@
 
 ---
 
+## 2026-06-30（Companion Release — Lite 包 + Qwen 按需下载）
+
+### Done
+
+- **Lite Release**：`bundle-python-runtime.sh` 恢复仅 Kokoro 依赖（去掉 `--extra qwen`），`Sonus-macos.zip` 回到 ~120MB
+- **Qwen addon**：新增 `scripts/bundle-qwen-addon.sh` → `Sonus-qwen-addon.zip`（~224MB，111 个增量 site-packages）
+- **Companion 按需安装**：`QwenAddonManager` 从 GitHub Release 下载 addon → `Application Support/Sonus/qwen-addon/`；`BackendManager` 注入 `PYTHONPATH`
+- **Qwen 模型**：`QwenModelManager` 用 embedded Python + `huggingface_hub` 下载 Qwen3 快照
+- **Settings**：引擎切换 /「Download Qwen3 Components…」触发 runtime + 模型下载
+- **CI**：发版附带两个 asset；校验 lite zip 不含 `torch/`
+
+### Changed Files
+
+- `scripts/bundle-python-runtime.sh`、`scripts/bundle-qwen-addon.sh`（新建）
+- `SonusCompanion/build_app.sh`、`.github/workflows/companion-release.yml`
+- `SonusCompanion/`：`QwenAddonManager.swift`、`QwenModelManager.swift`、`AppState.swift`、`BackendManager.swift`、`SettingsView.swift`、`GitHubReleaseClient.swift`
+- `src/sonus/engine_manager.py`、`docs/DECISIONS.md`
+
+### Next
+
+- 发版 tag 验证 lite + addon 端到端（切换 Qwen3-TTS + TTS）
+
+---
+
 ## 2026-06-29（多引擎 — Qwen3-TTS 热切换）
 
 ### Done

@@ -27,13 +27,15 @@ flowchart TB
 |------|------|
 | `BackendManager` | 模型就绪后 spawn uvicorn、health 轮询、Quit 时 terminate |
 | `ModelManager` | 检测 / 下载 Kokoro 模型文件 |
+| `QwenAddonManager` | 按需下载 `Sonus-qwen-addon.zip` 并安装至 Application Support |
+| `QwenModelManager` | 按需下载 Qwen3-TTS Hugging Face 快照 |
 | `EmbeddedBackendConfig` | runtime 路径、Application Support 目录、Debug/Release 默认行为 |
 
 **模型路径优先级**：自定义目录（Advanced）→ Application Support → 环境变量 `SONUS_MODELS_DIR` → 按需下载到 Application Support。
 
 **环境变量**（spawn 时注入）：`SONUS_MODELS_DIR`、`SONUS_CACHE_DIR`、`SONUS_PORT`、`SONUS_LOG_LEVEL`。
 
-**打包**：`scripts/bundle-python-runtime.sh` + `SonusCompanion/build_app.sh release` 将 venv 拷入 `Contents/Resources/sonus-runtime/`。
+**打包**：`scripts/bundle-python-runtime.sh` + `SonusCompanion/build_app.sh release` 将 **Lite** venv（Kokoro 依赖）拷入 `Contents/Resources/sonus-runtime/`；同次 release 另产 **`Sonus-qwen-addon.zip`**（`scripts/bundle-qwen-addon.sh`）。Companion 切换 Qwen3-TTS 时按需下载 addon 至 `~/Library/Application Support/Sonus/qwen-addon/`，spawn 时通过 `PYTHONPATH` 注入。
 
 ## 仓库位置
 
@@ -76,6 +78,8 @@ flowchart LR
 | `TextRuleStore` / `TextPreprocessor` | 文本规则持久化与 TTS 前 pipeline（见 [TEXT_RULES.md](TEXT_RULES.md)） |
 | `BackendManager` | Embedded uvicorn 子进程生命周期 |
 | `ModelManager` | Kokoro 模型检测与下载 |
+| `QwenAddonManager` | Qwen PyTorch 依赖按需下载 |
+| `QwenModelManager` | Qwen3 模型快照按需下载 |
 | `EmbeddedBackendConfig` | bundled runtime 与本地路径常量 |
 
 ## API 适配
