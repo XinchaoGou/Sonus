@@ -4,6 +4,13 @@ All notable changes to Sonus Companion are documented here.
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-06-30
+
+### Fixed
+
+- **Orphan backend crash after in-app update (exit code 1)**: when the app was replaced by the updater, the old Python backend child was sometimes left alive on port 8000; the new app then failed to bind with `[Errno 48] address already in use`. BackendManager now reaps orphaned sonus backends (matched by command line, killed via SIGTERM → SIGKILL) before spawning, in addition to waiting for the port to free.
+- **App version stuck at 0.4.2**: `Info.plist` had a hardcoded `CFBundleShortVersionString`, so `MARKETING_VERSION` in the project never flowed into the built app. Info.plist now uses `$(MARKETING_VERSION)` / `$(CURRENT_PROJECT_VERSION)` and the version follows the release tag.
+
 ## [0.4.3] - 2026-06-30
 
 ### Fixed

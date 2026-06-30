@@ -89,8 +89,7 @@ final class BackendManager {
     }
 
     func restart(port: Int, customModelsPath: String?, activeEngine: String) async {
-        await stopAndAwaitExit()
-        await waitForPortFree(port: port)
+        await preparePortForSpawn(port: port)
         await runEmbeddedStartup(port: port, customModelsPath: customModelsPath, activeEngine: activeEngine)
     }
 
@@ -122,12 +121,14 @@ final class BackendManager {
 
         updateState(.starting)
 
-        // Tear down any prior process and wait for the port to actually free
-        // before spawning. Without this, the new uvicorn can race the old one
-        // shutting down and hit `[Errno 48] address already in use` -> exit 1,
-        // which surfaces as "Backend exited unexpectedly" right after a switch.
-        await stopAndAwaitExit()
-        await waitForPortFree(port: port)
+        // Tear down any prior process, reap orphans left by a previous app
+        // session (e.g. after an in-app update replaced the bundle without
+        // killing its child backend), and wait for the port to actually free
+        // before spawning. Without this, the new uvicorn can race an old
+        // process still holding port 8000 -> [Errno 48] address already in use
+        // -> exit 1, surfaced as "Backend exited unexpectedly" right after a
+        // switch or update.
+        await preparePortForSpawn(port: port)
 
         do {
             try spawnBackend(port: port, modelsDirectory: modelsDirectory, activeEngine: activeEngine)
@@ -316,6 +317,68 @@ final class BackendManager {
 
         self.process = nil
         self.spawnedByApp = false
+    }
+
+    /// Make port ``port`` safe to spawn a new backend on: stop our tracked
+    /// process, reap any orphaned sonus backend still listening (left behind by
+    /// a previous app session that was killed/replaced before tearing down its
+    /// child), then wait for the port to actually be free.
+    private func preparePortForSpawn(port: Int) async {
+        await stopAndAwaitExit()
+        await reapOrphanedBackends(port: port)
+        await waitForPortFree(port: port)
+    }
+
+    /// Kill sonus backend processes still listening on ``port`` that we are not
+    /// tracking (orphans). Filtered by command line so we never clobber an
+    /// unrelated server the user happens to run on the same port.
+    private func reapOrphanedBackends(port: Int) async {
+        let pids = sonusBackendPidsOnPort(port: port)
+        guard !pids.isEmpty else { return }
+        AppLogger.log("embedded backend reaping orphan pids=\(pids.map(String.init)) on port \(port)")
+        for pid in pids {
+            kill(pid, SIGTERM)
+        }
+        // Give them a moment to exit gracefully, then SIGKILL stragglers.
+        try? await Task.sleep(nanoseconds: 800_000_000)
+        for pid in pids {
+            if kill(pid, 0) == 0 {
+                kill(pid, SIGKILL)
+            }
+        }
+    }
+
+    private func sonusBackendPidsOnPort(port: Int) -> [pid_t] {
+        // `lsof -ti tcp:PORT -sTCP:LISTEN` prints PIDs of listeners, one per line.
+        let raw = Self.runCapture(launchPath: "/usr/sbin/lsof",
+                                  arguments: ["-ti", "tcp:\(port)", "-sTCP:LISTEN"]) ?? ""
+        let candidates = raw.split(whereSeparator: { $0.isWhitespace }).compactMap { pid_t($0) }
+        // Only kill processes whose command looks like a sonus backend.
+        return candidates.filter {
+            Self.processCommandContains(pid: $0, needle: "sonus.app:app")
+                || Self.processCommandContains(pid: $0, needle: "sonus-runtime")
+        }
+    }
+
+    private static func processCommandContains(pid: pid_t, needle: String) -> Bool {
+        let cmd = runCapture(launchPath: "/bin/ps", arguments: ["-p", "\(pid)", "-o", "command="]) ?? ""
+        return cmd.contains(needle)
+    }
+
+    private static func runCapture(launchPath: String, arguments: [String]) -> String? {
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: launchPath)
+        proc.arguments = arguments
+        let pipe = Pipe()
+        proc.standardOutput = pipe
+        do {
+            try proc.run()
+            proc.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            return String(data: data, encoding: .utf8)
+        } catch {
+            return nil
+        }
     }
 
     /// Poll until nothing is listening on ``port`` (connection refused) or the

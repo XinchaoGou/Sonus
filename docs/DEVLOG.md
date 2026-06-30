@@ -4,6 +4,34 @@
 
 ---
 
+## 2026-06-30（v0.4.4 — 孤儿后端收割 + 版本号注入修复）
+
+### Done
+
+- **根因（更新后仍崩，exit 1）**：in-app 更新替换 `/Applications/Sonus.app` 时，旧 App 起的 Python 后端子进程未被一起回收，继续占着 8000 端口。新 App 启动时 `BackendManager.process` 为 nil，`stopAndAwaitExit` 不动它；`waitForPortFree` 等 5s 后放弃 → spawn → `[Errno 48] address already in use`。
+  - **修复**：新增 `preparePortForSpawn(port:)` = `stopAndAwaitExit` + `reapOrphanedBackends` + `waitForPortFree`。`reapOrphanedBackends` 用 `lsof -ti tcp:PORT -sTCP:LISTEN` 找占端口的 PID，按命令行含 `sonus.app:app`/`sonus-runtime` 过滤（不误杀用户其他服务），SIGTERM → 800ms → SIGKILL 清掉。
+- **版本号一直停在 0.4.2**：`Info.plist` 的 `CFBundleShortVersionString` 硬编码，`GENERATE_INFOPLIST_FILE=NO` 导致 pbxproj 的 `MARKETING_VERSION` 没注入。改为 `$(MARKETING_VERSION)` / `$(CURRENT_PROJECT_VERSION)`，版本号跟随 release tag。验证 Debug 构建 Info.plist 显示 0.4.4。
+
+### Changed Files
+
+- `SonusCompanion/SonusCompanion/BackendManager.swift`
+- `SonusCompanion/SonusCompanion/Info.plist`
+- `SonusCompanion/SonusCompanion.xcodeproj/project.pbxproj`
+- `SonusCompanion/CHANGELOG.md`、`docs/DEVLOG.md`
+
+### Verification
+
+- `xcodebuild build` / `test`：BUILD SUCCEEDED / TEST SUCCEEDED
+- Debug 产物 Info.plist：`CFBundleShortVersionString=0.4.4`
+- `uv run pytest`：84 passed
+- 清理 DerivedData
+
+### Next
+
+- 推 tag `v0.4.4` 走 CI 发版；用户在 App 内更新后真机回归切换 Qwen
+
+---
+
 ## 2026-06-30（Qwen 切换崩溃根治 — 端口竞争 + 合成期 MPS 兜底）
 
 ### Done
