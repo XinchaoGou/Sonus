@@ -4,7 +4,33 @@
 
 ---
 
-## 2026-06-28（Companion — v0.3.4 fix: embedded backend venv shim）
+## 2026-06-29（多引擎 — Qwen3-TTS 热切换）
+
+### Done
+
+- **`EngineManager`**：单引擎驻留、in-flight 排空（30s 超时 → 409）、unload/load
+- **HTTP**：`GET /engines`、`PUT /engines/active`；`/health` 增加 `engine`
+- **`engine_manifest.yaml`**：Kokoro 资产 URL + Qwen3 HF repo
+- **`Qwen3TTSEngine`**：官方 `qwen-tts` + 0.6B CustomVoice；逻辑音色映射（`zh_female` → `serena` 等）
+- **OpenAI**：`model` 校验 active 引擎（`tts-1` → kokoro）
+- **Companion**：Settings 引擎 Picker、`SONUS_ENGINE` spawn、运行时 `PUT /engines/active`
+- **脚本**：`scripts/download-qwen3-model.sh`；`bundle-python-runtime.sh` 加 `--extra qwen`
+- **验证**：pytest 77 passed；本机 `kokoro` ↔ `qwen3-tts` 热切换 + `POST /tts` WAV 通过
+
+### Changed Files
+
+- `src/sonus/engine_manager.py`、`engine_manifest.yaml`、`engines/qwen3_tts.py`、`voice_registry.py`
+- `src/sonus/app.py`、`factory.py`、`model_status.py`、`service.py`、`openai_compat.py`、`config.py`
+- `SonusCompanion/`：`SonusClient`、`AppState`、`BackendManager`、`SettingsView`、`TTSRequest.swift`
+- `scripts/download-qwen3-model.sh`、`pyproject.toml`（optional `qwen`）
+- `docs/DECISIONS.md`、`ARCHITECTURE.md`、`ROADMAP.md`
+
+### Next
+
+- Qwen3 模型按需下载 UI（Companion 进度条，当前用脚本）
+- embedded Release 验证 Qwen3 包体积与首包延迟
+
+---
 
 ### Done
 

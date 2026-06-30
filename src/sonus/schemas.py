@@ -37,6 +37,12 @@ class TTSRequest(BaseModel):
         return s
 
 
+class SetActiveEngineRequest(BaseModel):
+    """Body for PUT /engines/active."""
+
+    engine: Annotated[str, Field(min_length=1, description="Engine id from GET /engines")]
+
+
 class TTSStreamRequest(BaseModel):
     """Body for POST /tts/stream (PCM chunks only)."""
 

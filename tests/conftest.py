@@ -17,7 +17,7 @@ from sonus.service import TTSService
 class MockEngine:
     """In-memory TTS engine for unit/API tests (no ONNX models)."""
 
-    engine_id = "mock"
+    engine_id = "kokoro"
 
     def __init__(self, voices: list[str] | None = None) -> None:
         self.voices = voices or ["af_bella", "zf_001", "am_fenrir"]
@@ -50,6 +50,9 @@ class MockEngine:
     def list_voices(self) -> list[str]:
         return list(self.voices)
 
+    def unload(self) -> None:
+        pass
+
 
 @pytest.fixture
 def mock_engine() -> MockEngine:
@@ -58,12 +61,14 @@ def mock_engine() -> MockEngine:
 
 @pytest.fixture
 def mock_tts(mock_engine: MockEngine) -> TTSService:
-    return TTSService(mock_engine)
+    return TTSService(mock_engine, engine_id=mock_engine.engine_id)
 
 
 @pytest.fixture
-def api_client(mock_engine: MockEngine) -> TestClient:
+def api_client(mock_engine: MockEngine, monkeypatch: pytest.MonkeyPatch) -> TestClient:
+    monkeypatch.setattr("sonus.engine_manager.build_engine", lambda settings: mock_engine)
     with TestClient(app) as client:
-        client.app.state.tts = TTSService(mock_engine)
-        client.app.state.settings = Settings()
+        manager = client.app.state.engine_manager
+        manager._tts = TTSService(mock_engine, engine_id=mock_engine.engine_id, cache=None)
+        client.app.state.tts = manager.tts
         yield client

@@ -46,6 +46,25 @@ struct SonusClient: Sendable {
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
+    func fetchEngines() async throws -> [EngineStatusResponse] {
+        let data = try await get(path: "/engines")
+        return try JSONDecoder().decode([EngineStatusResponse].self, from: data)
+    }
+
+    func setActiveEngine(_ engineID: String) async throws -> String {
+        let payload = try JSONEncoder().encode(SetActiveEngineRequest(engine: engineID))
+        let (data, response) = try await put(path: "/engines/active", body: payload)
+        guard let http = response as? HTTPURLResponse else {
+            throw SonusClientError.invalidResponse
+        }
+        if http.statusCode >= 400 {
+            let detail = parseErrorDetail(from: data) ?? "HTTP \(http.statusCode)"
+            throw SonusClientError.httpError(status: http.statusCode, detail: detail)
+        }
+        let decoded = try JSONDecoder().decode(SetActiveEngineResponse.self, from: data)
+        return decoded.engine
+    }
+
     func synthesize(text: String, voice: String, speed: Double, format: String = "wav") async throws -> Data {
         let body = TTSRequest(text: text, voice: voice, speed: speed, format: format)
         let encoder = JSONEncoder()
@@ -176,6 +195,26 @@ struct SonusClient: Sendable {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        request.httpBody = body
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = timeoutSeconds
+
+        do {
+            return try await URLSession.shared.data(for: request)
+        } catch let error as URLError {
+            throw mapURLError(error)
+        } catch {
+            throw SonusClientError.connectionFailed(baseURL)
+        }
+    }
+
+    private func put(path: String, body: Data) async throws -> (Data, URLResponse) {
+        guard let url = URL(string: baseURL.trimmingCharacters(in: .whitespacesAndNewlines) + path) else {
+            throw SonusClientError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
         request.httpBody = body
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = timeoutSeconds

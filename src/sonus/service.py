@@ -36,15 +36,44 @@ class TTSService:
         self,
         engine: TTSEngine,
         *,
+        engine_id: str | None = None,
         max_chunk_chars: int = 280,
         cache: AudioCache | None = None,
+        on_synthesis_start=None,
+        on_synthesis_end=None,
     ) -> None:
         self._engine = engine
+        self._engine_id = engine_id or engine.engine_id
         self._max_chunk_chars = max_chunk_chars
         self._cache = cache
+        self._on_synthesis_start = on_synthesis_start
+        self._on_synthesis_end = on_synthesis_end
+
+    @property
+    def engine_id(self) -> str:
+        return self._engine_id
 
     def list_native_voices(self) -> list[str]:
         return self._engine.list_voices()
+
+    def _synthesis_scope(self):
+        if self._on_synthesis_start is None and self._on_synthesis_end is None:
+            from contextlib import nullcontext
+
+            return nullcontext()
+        from contextlib import contextmanager
+
+        @contextmanager
+        def _scope():
+            if self._on_synthesis_start is not None:
+                self._on_synthesis_start()
+            try:
+                yield
+            finally:
+                if self._on_synthesis_end is not None:
+                    self._on_synthesis_end()
+
+        return _scope()
 
     def synthesize_bytes(
         self,
@@ -78,43 +107,44 @@ class TTSService:
                 }[fmt]
                 return EncodedAudio(data=cached, media_type=media_type, cache="hit")
 
-        engine_voice, lang = self._resolve_voice(voice)
-        chunks = split_text(text, self._max_chunk_chars)
-        if not chunks:
-            raise ValueError("text must not be empty or whitespace-only")
+        with self._synthesis_scope():
+            engine_voice, lang = self._resolve_voice(voice)
+            chunks = split_text(text, self._max_chunk_chars)
+            if not chunks:
+                raise ValueError("text must not be empty or whitespace-only")
 
-        if len(chunks) == 1:
-            result = self._engine.synthesize(chunks[0], voice=engine_voice, speed=speed, lang=lang)
-        else:
-            logger.info(
-                "long text split into %d chunks (max_chunk_chars=%d, total_chars=%d)",
-                len(chunks),
-                self._max_chunk_chars,
-                len(text),
-            )
-            result = self._synthesize_chunks(chunks, engine_voice=engine_voice, speed=speed, lang=lang)
+            if len(chunks) == 1:
+                result = self._engine.synthesize(chunks[0], voice=engine_voice, speed=speed, lang=lang)
+            else:
+                logger.info(
+                    "long text split into %d chunks (max_chunk_chars=%d, total_chars=%d)",
+                    len(chunks),
+                    self._max_chunk_chars,
+                    len(text),
+                )
+                result = self._synthesize_chunks(chunks, engine_voice=engine_voice, speed=speed, lang=lang)
 
-        payload, media_type = encode_audio(
-            np.asarray(result.samples, dtype=np.float32),
-            result.sample_rate,
-            fmt,
-        )
-        cache_status: CacheStatus = "disabled"
-        if self._cache is not None:
-            self._cache.put(
-                payload,
-                voice=voice,
-                speed=speed,
-                fmt=fmt,
-                max_chunk_chars=self._max_chunk_chars,
-                text=text,
+            payload, media_type = encode_audio(
+                np.asarray(result.samples, dtype=np.float32),
+                result.sample_rate,
+                fmt,
             )
-            cache_status = "miss"
+            cache_status: CacheStatus = "disabled"
+            if self._cache is not None:
+                self._cache.put(
+                    payload,
+                    voice=voice,
+                    speed=speed,
+                    fmt=fmt,
+                    max_chunk_chars=self._max_chunk_chars,
+                    text=text,
+                )
+                cache_status = "miss"
 
         return EncodedAudio(data=payload, media_type=media_type, cache=cache_status)
 
     def _resolve_voice(self, voice: str) -> tuple[str, str]:
-        profile = resolve_logical_voice(voice)
+        profile = resolve_logical_voice(voice, self._engine_id)
         if profile is not None:
             return profile.engine_voice, profile.lang
 
@@ -183,19 +213,25 @@ class TTSService:
         cache_status: CacheStatus = "miss" if self._cache is not None else "disabled"
 
         async def live_chunks() -> AsyncIterator[bytes]:
-            buffer = bytearray()
-            async for chunk in self._synthesize_stream_pcm_uncached(text=text, voice=voice, speed=speed):
-                buffer.extend(chunk)
-                yield chunk
-            if self._cache is not None and buffer:
-                self._cache.put(
-                    bytes(buffer),
-                    voice=voice,
-                    speed=speed,
-                    fmt="pcm",
-                    max_chunk_chars=self._max_chunk_chars,
-                    text=text,
-                )
+            if self._on_synthesis_start is not None:
+                self._on_synthesis_start()
+            try:
+                buffer = bytearray()
+                async for chunk in self._synthesize_stream_pcm_uncached(text=text, voice=voice, speed=speed):
+                    buffer.extend(chunk)
+                    yield chunk
+                if self._cache is not None and buffer:
+                    self._cache.put(
+                        bytes(buffer),
+                        voice=voice,
+                        speed=speed,
+                        fmt="pcm",
+                        max_chunk_chars=self._max_chunk_chars,
+                        text=text,
+                    )
+            finally:
+                if self._on_synthesis_end is not None:
+                    self._on_synthesis_end()
 
         return cache_status, live_chunks()
 

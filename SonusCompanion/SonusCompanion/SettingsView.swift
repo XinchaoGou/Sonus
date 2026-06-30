@@ -33,6 +33,27 @@ struct SettingsView: View {
                         .lineLimit(3)
                 }
 
+                Picker("Engine", selection: $appState.activeEngine) {
+                    if appState.engines.isEmpty {
+                        Text("Kokoro").tag("kokoro")
+                        Text("Qwen3-TTS").tag("qwen3-tts")
+                    } else {
+                        ForEach(appState.engines) { engine in
+                            Text(engineLabel(engine)).tag(engine.id)
+                        }
+                    }
+                }
+                .onChange(of: appState.activeEngine) { _, newValue in
+                    Task { await appState.switchActiveEngine(to: newValue) }
+                }
+
+                if let engineSwitchMessage = appState.engineSwitchMessage {
+                    Text(engineSwitchMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                }
+
                 if !appState.useExternalServer {
                     Stepper(value: $appState.serverPort, in: 1024...65535) {
                         Text("Port: \(appState.serverPort)")
@@ -353,6 +374,16 @@ struct SettingsView: View {
             }
         }
         .font(.caption)
+    }
+
+    private func engineLabel(_ engine: EngineStatusResponse) -> String {
+        if engine.ready {
+            return engine.name
+        }
+        if engine.installed {
+            return "\(engine.name) (incomplete)"
+        }
+        return "\(engine.name) (not installed)"
     }
 
     private var modelsLocationSummary: String {

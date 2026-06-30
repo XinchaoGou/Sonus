@@ -17,22 +17,16 @@ class VoiceProfile:
     lang: str
 
 
-# Logical names are the stable surface for clients; backend ids may change when swapping engines.
-_LOGICAL: dict[str, VoiceProfile] = {
-    "zh_female": VoiceProfile(engine_voice="zf_001", lang="cmn"),
-    "zh_male": VoiceProfile(engine_voice="zm_010", lang="cmn"),
-    "en_female": VoiceProfile(engine_voice="af_bella", lang="en-us"),
-    "en_male": VoiceProfile(engine_voice="am_fenrir", lang="en-us"),
-    "ja_female": VoiceProfile(engine_voice="jf_alpha", lang="ja"),
-}
+def resolve_logical_voice(name: str, engine_id: str = "kokoro") -> VoiceProfile | None:
+    from sonus.voice_registry import resolve_logical_voice_for_engine
+
+    return resolve_logical_voice_for_engine(name, engine_id)
 
 
-def resolve_logical_voice(name: str) -> VoiceProfile | None:
-    return _LOGICAL.get(name)
+def list_logical_voices(engine_id: str = "kokoro") -> dict[str, VoiceProfile]:
+    from sonus.voice_registry import list_logical_voices_for_engine
 
-
-def list_logical_voices() -> dict[str, VoiceProfile]:
-    return dict(_LOGICAL)
+    return list_logical_voices_for_engine(engine_id)
 
 
 def is_cmn_lang(lang: str) -> bool:

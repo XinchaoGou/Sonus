@@ -23,11 +23,16 @@ Sonus/
     ├── openai_compat.py     # OpenAI /v1/audio/speech 请求模型与 voice 映射
     ├── zh_g2p.py            # 中文 ZHG2P + 中英混排 en_callable
     ├── factory.py           # build_engine / build_tts_service
+    ├── engine_manager.py    # 热切换、单引擎驻留、合成排空
+    ├── engine_manifest.yaml # 引擎注册表（资产 / HF repo）
+    ├── engine_manifest.py
+    ├── voice_registry.py    # 各引擎逻辑音色映射
     ├── audio_encode.py      # float32 PCM → WAV / MP3
     ├── cli.py               # Typer：serve、tts
     └── engines/
         ├── base.py          # TTSEngine Protocol、SynthesisResult
-        └── kokoro.py        # KokoroEngine（懒加载 Kokoro）
+        ├── kokoro.py        # KokoroEngine（懒加载 Kokoro）
+        └── qwen3_tts.py     # Qwen3-TTS CustomVoice（可选 qwen-tts）
 ```
 
 ## 请求路径（HTTP）
@@ -44,7 +49,7 @@ flowchart LR
   Engine --> Kokoro["KokoroEngine → kokoro_onnx"]
 ```
 
-1. **`app.py`**：解析 `TTSRequest`，依赖注入 `TTSService`；错误映射为 400 / 503 / 500。  
+1. **`app.py`**：解析 `TTSRequest`，依赖注入 `EngineManager` / `TTSService`；`GET /engines`、`PUT /engines/active` 管理 active 引擎；错误映射为 400 / 409 / 503 / 500。  
 2. **`RequestLoggingMiddleware`**：分配/透传 **`X-Request-ID`**，记录请求耗时；`/tts` 另记 synthesis 摘要（不记录全文）。  
 3. **`logging_config`**：`SONUS_LOG_LEVEL`、启动时打印引擎与模型文件就绪情况。  
 4. **`TTSService`**：解析 voice；可选 **`AudioCache`**；`split_text` 切长文；逐段合成；`encode_audio` 或流式 PCM。  
@@ -66,7 +71,7 @@ flowchart LR
 | log_level | `SONUS_LOG_LEVEL` | `debug` / `info` / `warning` / `error` / `critical` |
 | max_chunk_chars | `SONUS_MAX_CHUNK_CHARS` | 长文本切分；`0` 禁用 |
 | cache | `SONUS_CACHE_*` | 磁盘 hash 缓存；TTL 可选 |
-| engine | `SONUS_ENGINE` | 当前仅 `kokoro` |
+| engine | `SONUS_ENGINE` | 当前 `kokoro` 或 `qwen3-tts`（可运行中 `PUT /engines/active` 热切换） |
 | zh_en_mixed | `SONUS_ZH_EN_MIXED` | 中文句内英文走 espeak G2P |
 | 模型路径 | `SONUS_MODEL_PATH` / `SONUS_VOICES_PATH` | 相对路径相对**进程 cwd**，一般为项目根 |
 

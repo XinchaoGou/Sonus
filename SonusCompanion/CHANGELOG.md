@@ -4,6 +4,21 @@ All notable changes to Sonus Companion are documented here.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-30
+
+### Added
+
+- **Multi-engine TTS**: runtime hot-switch between **Kokoro** and **Qwen3-TTS** (0.6B CustomVoice) via `GET /engines` and `PUT /engines/active`
+- Settings → **Engine** picker; cold start uses `SONUS_ENGINE` from UserDefaults / spawn env
+- `scripts/download-qwen3-model.sh` for Qwen3 Hugging Face snapshot (~1.7GB)
+- Embedded runtime bundles optional `qwen-tts` dependencies (`uv sync --extra qwen`)
+
+### Changed
+
+- `GET /health` includes active `engine`
+- OpenAI `/v1/audio/speech` `model` must match the active engine
+- Stable logical voices (`zh_female`, etc.) map per engine
+
 ## [0.3.4] - 2026-06-28
 
 ### Fixed

@@ -36,13 +36,14 @@
 13. ~~**Companion Embedded Backend**~~（已完成：`BackendManager` + `ModelManager` + `scripts/bundle-python-runtime.sh`）  
 14. ~~**Embedded Release 发版验证**~~（v0.3.4 修复 venv shim 后 embedded backend 端到端通过：`/health` `models_ready=true` + `POST /tts` WAV）  
 15. **bundle ffmpeg**（embedded MP3 开箱即用）  
-16. **配置中心 / 多音色管理 UI**：视产品需要再开。
+16. ~~**多引擎热切换 + Qwen3-TTS**~~（已完成：`EngineManager` + `/engines` + `qwen3-tts` 引擎；见 [DECISIONS 017](DECISIONS.md#017--多引擎热切换--qwen3-tts)）  
+17. **配置中心 / 多音色管理 UI**：视产品需要再开。
 
 ## Phase 2 候选（来自产品规划）
 
 - **Text Rules 服务端/CLI 复用**（Companion 仍为配置入口；可选读共享 JSON）  
-- 多引擎运行时切换或 A/B（仍保持客户端 API 稳定）  
-- 更高质量模型评估（Qwen3-TTS、XTTS-v2 等）— 每引入一引擎一条 `DECISIONS` 记录  
+- ~~多引擎运行时切换~~（第一版：`kokoro` ↔ `qwen3-tts`，见 DECISIONS 017）  
+- 更高质量模型评估（Piper 等）— 每引入一引擎一条 `DECISIONS` 记录  
 
 ## 明确暂不排期
 

@@ -75,6 +75,17 @@ class Settings(BaseSettings):
         description="Use misaki en_callable for English segments in Chinese text",
     )
 
+    qwen3_model_dir: Path = Field(
+        default=Path("models/qwen3-tts"),
+        description="Directory containing Qwen3-TTS CustomVoice Hugging Face snapshot",
+    )
+
+    engine_switch_timeout_seconds: float = Field(
+        default=30.0,
+        ge=1.0,
+        description="Max seconds to wait for in-flight synthesis before engine switch fails",
+    )
+
     def resolve_models_dir(self) -> Path | None:
         if self.models_dir is None:
             return None
@@ -100,6 +111,12 @@ class Settings(BaseSettings):
 
     def resolve_zh_vocab_config_path(self) -> Path:
         return self._resolve_path(self.zh_vocab_config_path, "kokoro-v1.1-zh-config.json")
+
+    def resolve_qwen3_model_dir(self) -> Path:
+        models_dir = self.resolve_models_dir()
+        if models_dir is not None:
+            return (models_dir / "qwen3-tts").resolve()
+        return self.qwen3_model_dir.expanduser().resolve()
 
     def resolve_cache_dir(self) -> Path:
         return self.cache_dir.expanduser().resolve()

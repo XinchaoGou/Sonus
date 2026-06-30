@@ -17,10 +17,17 @@ dependencies = [
     "soundfile>=0.14.0",
     "typer>=0.26.7",
     "uvicorn[standard]>=0.49.0",
+    "pyyaml>=6.0.2",
 ]
 
 [project.scripts]
 sonus = "sonus.cli:main"
+
+[project.optional-dependencies]
+qwen = [
+    "qwen-tts>=0.1.1",
+    "huggingface_hub>=0.36.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.11.17,<0.12.0"]

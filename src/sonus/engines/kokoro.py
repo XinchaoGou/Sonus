@@ -146,3 +146,8 @@ class KokoroEngine:
                 "No Kokoro model files found. Download v1.0 and/or v1.1-zh assets (see README)."
             )
         return sorted(voices)
+
+    def unload(self) -> None:
+        self._kokoro_v1 = None
+        self._kokoro_zh = None
+        self._zh_g2p = None

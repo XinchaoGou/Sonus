@@ -52,7 +52,8 @@ final class BackendManager {
         useExternalServer: Bool,
         externalServerURL: String,
         port: Int,
-        customModelsPath: String?
+        customModelsPath: String?,
+        activeEngine: String
     ) async -> String {
         if useExternalServer {
             stopSpawnedProcess()
@@ -73,7 +74,7 @@ final class BackendManager {
 
         startupTask?.cancel()
         startupTask = Task {
-            await self.runEmbeddedStartup(port: port, customModelsPath: customModelsPath)
+            await self.runEmbeddedStartup(port: port, customModelsPath: customModelsPath, activeEngine: activeEngine)
         }
         await startupTask?.value
         return EmbeddedBackendConfig.embeddedBaseURL(port: port)
@@ -86,12 +87,12 @@ final class BackendManager {
         updateState(.idle)
     }
 
-    func restart(port: Int, customModelsPath: String?) async {
+    func restart(port: Int, customModelsPath: String?, activeEngine: String) async {
         stopSpawnedProcess()
-        await runEmbeddedStartup(port: port, customModelsPath: customModelsPath)
+        await runEmbeddedStartup(port: port, customModelsPath: customModelsPath, activeEngine: activeEngine)
     }
 
-    private func runEmbeddedStartup(port: Int, customModelsPath: String?) async {
+    private func runEmbeddedStartup(port: Int, customModelsPath: String?, activeEngine: String) async {
         updateState(.checkingModels)
 
         let targetDirectory = ModelManager.targetModelsDirectory(customPath: customModelsPath)
@@ -120,7 +121,7 @@ final class BackendManager {
         updateState(.starting)
 
         do {
-            try spawnBackend(port: port, modelsDirectory: modelsDirectory)
+            try spawnBackend(port: port, modelsDirectory: modelsDirectory, activeEngine: activeEngine)
         } catch {
             updateState(.failed(error.localizedDescription))
             return
@@ -154,7 +155,7 @@ final class BackendManager {
         }
     }
 
-    private func spawnBackend(port: Int, modelsDirectory: URL) throws {
+    private func spawnBackend(port: Int, modelsDirectory: URL, activeEngine: String) throws {
         stopSpawnedProcess()
 
         guard let python = EmbeddedBackendConfig.embeddedPythonExecutable else {
@@ -182,6 +183,7 @@ final class BackendManager {
         environment["SONUS_HOST"] = "127.0.0.1"
         environment["SONUS_PORT"] = String(port)
         environment["SONUS_MODELS_DIR"] = modelsDirectory.path
+        environment["SONUS_ENGINE"] = activeEngine
         environment["SONUS_CACHE_DIR"] = EmbeddedBackendConfig.cacheDirectory.path
         environment["SONUS_LOG_LEVEL"] = "info"
 

@@ -7,6 +7,7 @@ enum AppSettings {
     static let serverPortKey = "serverPort"
     static let useExternalServerKey = "useExternalServer"
     static let customModelsPathKey = "customModelsPath"
+    static let activeEngineKey = "activeEngine"
     static let defaultVoiceKey = "defaultVoice"
     static let defaultSpeedKey = "defaultSpeed"
     static let hotkeyConfigKey = "hotkeyConfig"
@@ -16,6 +17,7 @@ enum AppSettings {
 
     static let defaultServerURL = "http://127.0.0.1:8000"
     static let defaultServerPort = 8000
+    static let defaultEngineID = "kokoro"
     static let defaultVoiceID = "zh_female"
     static let defaultSpeedValue = 1.0
 
@@ -40,6 +42,11 @@ enum AppSettings {
     static var customModelsPath: String {
         get { UserDefaults.standard.string(forKey: customModelsPathKey) ?? "" }
         set { UserDefaults.standard.set(newValue, forKey: customModelsPathKey) }
+    }
+
+    static var activeEngine: String {
+        get { UserDefaults.standard.string(forKey: activeEngineKey) ?? defaultEngineID }
+        set { UserDefaults.standard.set(newValue, forKey: activeEngineKey) }
     }
 
     static func embeddedServerURL(port: Int = serverPort) -> String {
@@ -139,6 +146,9 @@ final class AppState {
     var serverPort: Int = AppSettings.serverPort
     var useExternalServer: Bool = AppSettings.useExternalServer
     var customModelsPath: String = AppSettings.customModelsPath
+    var activeEngine: String = AppSettings.activeEngine
+    var engines: [EngineStatusResponse] = []
+    var engineSwitchMessage: String?
     var backendState: BackendState = .idle
     var backendStatusMessage: String = BackendState.idle.displayName
     var clipboardFallbackEnabled: Bool = AppSettings.clipboardFallbackEnabled
@@ -187,10 +197,12 @@ final class AppState {
             useExternalServer: useExternalServer,
             externalServerURL: externalServerURLValue(),
             port: serverPort,
-            customModelsPath: customModelsPath.nilIfEmpty
+            customModelsPath: customModelsPath.nilIfEmpty,
+            activeEngine: activeEngine
         )
         serverURL = resolvedURL
         if backendManager.state.isOperational || useExternalServer {
+            await refreshEngines()
             await refreshVoices()
         }
     }
@@ -201,9 +213,14 @@ final class AppState {
             return
         }
         syncServerURLFromSettings()
-        await backendManager.restart(port: serverPort, customModelsPath: customModelsPath.nilIfEmpty)
+        await backendManager.restart(
+            port: serverPort,
+            customModelsPath: customModelsPath.nilIfEmpty,
+            activeEngine: activeEngine
+        )
         serverURL = AppSettings.embeddedServerURL(port: serverPort)
         if backendManager.state.isOperational {
+            await refreshEngines()
             await refreshVoices()
         }
     }
@@ -453,6 +470,7 @@ final class AppState {
         AppSettings.serverPort = serverPort
         AppSettings.useExternalServer = useExternalServer
         AppSettings.customModelsPath = customModelsPath
+        AppSettings.activeEngine = activeEngine
         if useExternalServer {
             AppSettings.serverURL = serverURL
         }
@@ -462,6 +480,38 @@ final class AppState {
 
     func applyBackendSettingsChange() {
         Task { await startBackendAndRefreshVoices() }
+    }
+
+    func refreshEngines() async {
+        let client = SonusClient(baseURL: serverURL)
+        do {
+            engines = try await client.fetchEngines()
+            if let active = engines.first(where: { $0.active }) {
+                activeEngine = active.id
+                AppSettings.activeEngine = active.id
+            }
+        } catch {
+            AppLogger.log("engines refresh failed: \(error.localizedDescription)")
+        }
+    }
+
+    func switchActiveEngine(to engineID: String) async {
+        engineSwitchMessage = nil
+        stop()
+        let client = SonusClient(baseURL: serverURL, timeoutSeconds: 120)
+        do {
+            let active = try await client.setActiveEngine(engineID)
+            activeEngine = active
+            AppSettings.activeEngine = active
+            await refreshEngines()
+            await refreshVoices()
+            engineSwitchMessage = "Active engine: \(active)"
+            AppLogger.log("engine switched to \(active)")
+        } catch {
+            let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            engineSwitchMessage = message
+            AppLogger.log("engine switch failed: \(message)")
+        }
     }
 
     func refreshVoices() async {
@@ -486,6 +536,7 @@ final class AppState {
         let client = SonusClient(baseURL: serverURL)
         do {
             try await client.health()
+            await refreshEngines()
             await refreshVoices()
             return "Sonus server is reachable at \(serverURL)."
         } catch {

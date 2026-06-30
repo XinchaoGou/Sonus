@@ -8,12 +8,17 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import Response, StreamingResponse
 
 from sonus.config import Settings
-from sonus.factory import build_engine, build_tts_service
-from sonus.model_status import missing_model_files, models_ready
+from sonus.engine_manager import EngineManager, EngineSwitchError, engine_status_to_dict
 from sonus.logging_config import configure_logging, log_startup
 from sonus.middleware import RequestLoggingMiddleware
-from sonus.openai_compat import OpenAISpeechRequest, resolve_openai_voice, to_output_format
-from sonus.schemas import TTSRequest, TTSStreamRequest
+from sonus.model_status import missing_model_files, models_ready
+from sonus.openai_compat import (
+    OpenAISpeechRequest,
+    resolve_openai_model,
+    resolve_openai_voice,
+    to_output_format,
+)
+from sonus.schemas import SetActiveEngineRequest, TTSRequest, TTSStreamRequest
 from sonus.service import HEADER_CACHE, TTSService
 from sonus.voices import list_logical_voices
 
@@ -25,16 +30,25 @@ async def lifespan(app: FastAPI):
     settings = Settings()
     configure_logging(settings.log_level)
     log_startup(settings)
-    engine = build_engine(settings)
+    engine_manager = EngineManager(settings)
     app.state.settings = settings
-    app.state.tts = build_tts_service(settings, engine)
-    logger.info("TTS engine ready: %s (cache=%s)", settings.engine, settings.cache_enabled)
+    app.state.engine_manager = engine_manager
+    app.state.tts = engine_manager.tts
+    logger.info(
+        "TTS engine ready: %s (cache=%s)",
+        engine_manager.active_engine_id,
+        settings.cache_enabled,
+    )
     yield
     logger.info("Sonus shutting down")
 
 
+def get_engine_manager(request: Request) -> EngineManager:
+    return request.app.state.engine_manager
+
+
 def get_tts(request: Request) -> TTSService:
-    return request.app.state.tts
+    return request.app.state.engine_manager.tts
 
 
 def get_settings(request: Request) -> Settings:
@@ -51,11 +65,15 @@ app.add_middleware(RequestLoggingMiddleware)
 
 
 @app.get("/health")
-def health(settings: Settings = Depends(get_settings)) -> dict[str, str | bool | list[str]]:
+def health(
+    settings: Settings = Depends(get_settings),
+    engine_manager: EngineManager = Depends(get_engine_manager),
+) -> dict[str, str | bool | list[str]]:
     """Liveness probe; includes model file readiness for embedded clients."""
     ready = models_ready(settings)
     payload: dict[str, str | bool | list[str]] = {
         "status": "ok" if ready else "degraded",
+        "engine": engine_manager.active_engine_id,
         "models_ready": ready,
     }
     if not ready:
@@ -63,18 +81,53 @@ def health(settings: Settings = Depends(get_settings)) -> dict[str, str | bool |
     return payload
 
 
+@app.get("/engines")
+def list_engines(engine_manager: EngineManager = Depends(get_engine_manager)) -> list[dict[str, Any]]:
+    """List registered engines with install/ready state."""
+    return [engine_status_to_dict(status) for status in engine_manager.list_engines()]
+
+
+@app.put("/engines/active")
+def set_active_engine(
+    body: SetActiveEngineRequest,
+    request: Request,
+    engine_manager: EngineManager = Depends(get_engine_manager),
+) -> dict[str, str]:
+    """Hot-switch the active TTS engine (single-engine residency)."""
+    try:
+        active = engine_manager.switch_engine(
+            body.engine,
+            timeout=engine_manager.settings.engine_switch_timeout_seconds,
+        )
+    except EngineSwitchError as exc:
+        message = str(exc)
+        if "synthesis request" in message:
+            raise HTTPException(status_code=409, detail=message) from exc
+        if "not ready" in message or "requires optional" in message:
+            raise HTTPException(status_code=503, detail=message) from exc
+        raise HTTPException(status_code=400, detail=message) from exc
+
+    request.app.state.tts = engine_manager.tts
+    engine_manager.settings.engine = active
+    return {"engine": active}
+
+
 @app.get("/voices")
 def voices(
     tts: TTSService = Depends(get_tts),
-    settings: Settings = Depends(get_settings),
+    engine_manager: EngineManager = Depends(get_engine_manager),
 ) -> dict[str, Any]:
     """Logical voices (stable) plus native engine ids (informational)."""
-    logical = {k: {"engine_voice": v.engine_voice, "lang": v.lang} for k, v in list_logical_voices().items()}
+    engine_id = engine_manager.active_engine_id
+    logical = {
+        k: {"engine_voice": v.engine_voice, "lang": v.lang}
+        for k, v in list_logical_voices(engine_id).items()
+    }
     try:
         native = tts.list_native_voices()
     except FileNotFoundError:
         native = []
-    return {"engine": settings.engine, "logical": logical, "native": native}
+    return {"engine": engine_id, "logical": logical, "native": native}
 
 
 @app.post("/tts")
@@ -130,7 +183,7 @@ async def tts_stream_endpoint(body: TTSStreamRequest, tts: TTSService = Depends(
             async for chunk in stream:
                 total_bytes += len(chunk)
                 yield chunk
-        except Exception as e:  # pragma: no cover — defensive
+        except Exception:  # pragma: no cover — defensive
             logger.exception("streaming TTS failed voice=%s", body.voice)
             raise
         logger.info(
@@ -149,12 +202,26 @@ async def tts_stream_endpoint(body: TTSStreamRequest, tts: TTSService = Depends(
 
 
 @app.post("/v1/audio/speech")
-def openai_speech_endpoint(body: OpenAISpeechRequest, tts: TTSService = Depends(get_tts)) -> Response:
+def openai_speech_endpoint(
+    body: OpenAISpeechRequest,
+    tts: TTSService = Depends(get_tts),
+    engine_manager: EngineManager = Depends(get_engine_manager),
+) -> Response:
     """OpenAI-compatible text-to-speech (POST /v1/audio/speech)."""
     if body.instructions:
         logger.debug("ignoring OpenAI instructions field (not supported)")
     try:
-        voice = resolve_openai_voice(body.voice, native_voices=set(tts.list_native_voices()))
+        resolved_model = resolve_openai_model(body.model)
+        if resolved_model != engine_manager.active_engine_id:
+            raise ValueError(
+                f"model {body.model!r} does not match active engine "
+                f"{engine_manager.active_engine_id!r}"
+            )
+        voice = resolve_openai_voice(
+            body.voice,
+            native_voices=set(tts.list_native_voices()),
+            engine_id=engine_manager.active_engine_id,
+        )
         result = tts.synthesize_bytes(
             text=body.input,
             voice=voice,

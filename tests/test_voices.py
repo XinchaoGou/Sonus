@@ -12,14 +12,21 @@ from sonus.voices import (
 
 
 def test_resolve_logical_zh_female() -> None:
-    profile = resolve_logical_voice("zh_female")
+    profile = resolve_logical_voice("zh_female", "kokoro")
     assert profile is not None
     assert profile.engine_voice == "zf_001"
     assert profile.lang == "cmn"
 
 
+def test_resolve_logical_qwen3_zh_female() -> None:
+    profile = resolve_logical_voice("zh_female", "qwen3-tts")
+    assert profile is not None
+    assert profile.engine_voice == "serena"
+    assert profile.lang == "Chinese"
+
+
 def test_resolve_logical_unknown() -> None:
-    assert resolve_logical_voice("not_a_voice") is None
+    assert resolve_logical_voice("not_a_voice", "kokoro") is None
 
 
 @pytest.mark.parametrize(

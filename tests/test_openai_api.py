@@ -26,7 +26,7 @@ def test_openai_speech_wav(api_client: TestClient) -> None:
     response = api_client.post(
         "/v1/audio/speech",
         json={
-            "model": "gpt-4o-mini-tts",
+            "model": "tts-1",
             "input": "WAV test",
             "voice": "nova",
             "response_format": "wav",

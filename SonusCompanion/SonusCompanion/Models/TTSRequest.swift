@@ -22,6 +22,42 @@ struct TTSStreamRequest: Encodable, Sendable {
 
 struct HealthResponse: Decodable, Sendable {
     let status: String
+    let engine: String?
+    let modelsReady: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case status
+        case engine
+        case modelsReady = "models_ready"
+    }
+}
+
+struct EngineStatusResponse: Decodable, Sendable, Identifiable {
+    let id: String
+    let name: String
+    let active: Bool
+    let installed: Bool
+    let ready: Bool
+    let missingModels: [String]
+    let optionalDependency: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case active
+        case installed
+        case ready
+        case missingModels = "missing_models"
+        case optionalDependency = "optional_dependency"
+    }
+}
+
+struct SetActiveEngineRequest: Encodable, Sendable {
+    let engine: String
+}
+
+struct SetActiveEngineResponse: Decodable, Sendable {
+    let engine: String
 }
 
 struct VoicesAPIResponse: Decodable, Sendable {

@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from sonus.engine_manifest import load_engine_manifest
 from sonus.voices import list_logical_voices, resolve_logical_voice
 
 # Map OpenAI built-in voice ids to Sonus logical voices (stable HTTP surface).
@@ -67,17 +68,32 @@ class OpenAISpeechRequest(BaseModel):
         return v
 
 
-def resolve_openai_voice(voice: str, *, native_voices: set[str]) -> str:
+def resolve_openai_model(model: str) -> str:
+    """Map OpenAI model id (or alias) to a Sonus engine id."""
+    normalized = model.strip().lower()
+    manifest = load_engine_manifest()
+    for engine_id, spec in manifest.engines.items():
+        if normalized == engine_id.lower():
+            return engine_id
+        if normalized in {alias.lower() for alias in spec.openai_model_aliases}:
+            return engine_id
+    raise ValueError(
+        f"Unknown model {model!r}. Use an active engine id ({', '.join(manifest.list_ids())}) "
+        "or a supported OpenAI alias (e.g. tts-1)."
+    )
+
+
+def resolve_openai_voice(voice: str, *, native_voices: set[str], engine_id: str) -> str:
     """Map OpenAI voice id (or Sonus logical / native id) to a Sonus voice id."""
     mapped = OPENAI_VOICE_MAP.get(voice)
     if mapped is not None:
         return mapped
-    if resolve_logical_voice(voice) is not None:
+    if resolve_logical_voice(voice, engine_id) is not None:
         return voice
     if voice in native_voices:
         return voice
     known = sorted(OPENAI_VOICE_MAP.keys())
-    logical = sorted(list_logical_voices().keys())
+    logical = sorted(list_logical_voices(engine_id).keys())
     raise ValueError(
         f"Unknown voice {voice!r}. Use an OpenAI voice ({', '.join(known[:6])}, …), "
         f"a logical id ({', '.join(logical)}), or a native engine voice."
