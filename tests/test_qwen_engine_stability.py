@@ -52,6 +52,7 @@ def test_switch_unloads_previous_engine(
         return kokoro
 
     monkeypatch.setattr("sonus.engine_manager.build_engine", build)
+    monkeypatch.setattr("sonus.engine_manager._check_optional_dependency", lambda spec: None)
     manager = EngineManager(dual_engine_settings)
     assert manager.active_engine_id == "kokoro"
 
@@ -72,6 +73,7 @@ def test_switch_round_trip_preserves_tts_service(
         "sonus.engine_manager.build_engine",
         lambda settings: TrackingMockEngine(engine_id=settings.engine),
     )
+    monkeypatch.setattr("sonus.engine_manager._check_optional_dependency", lambda spec: None)
     manager = EngineManager(dual_engine_settings)
 
     for engine_id in ("qwen3-tts", "kokoro", "qwen3-tts", "kokoro"):
@@ -145,3 +147,52 @@ def test_qwen_mps_load_falls_back_to_cpu(tmp_path: Path, monkeypatch: pytest.Mon
 
     assert loaded is fake_model
     assert device_maps == ["mps", "cpu"]
+
+
+def test_qwen_device_override_forces_cpu(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SONUS_QWEN_DEVICE", "cpu")
+    from sonus.engines.qwen3_tts import _resolve_device
+
+    assert _resolve_device() == "cpu"
+
+
+def test_qwen_synthesize_falls_back_to_cpu_on_mps_runtime_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import sys
+
+    qwen_dir = tmp_path / "qwen3-tts"
+    qwen_dir.mkdir()
+    (qwen_dir / "config.json").write_text("{}")
+
+    engine = Qwen3TTSEngine(qwen_dir)
+
+    model_on_mps = MagicMock()
+    model_on_mps.generate_custom_voice.side_effect = RuntimeError("mps allocator boom")
+    model_on_cpu = MagicMock()
+    model_on_cpu.generate_custom_voice.return_value = ([[0.1, 0.2, 0.3]], 24000)
+
+    def from_pretrained(*_args, **kwargs):
+        return model_on_mps if kwargs["device_map"] == "mps" else model_on_cpu
+
+    fake_torch = MagicMock()
+    fake_torch.backends.mps.is_available.return_value = True
+    fake_torch.cuda.is_available.return_value = False
+    fake_torch.float32 = float
+
+    fake_qwen_module = MagicMock()
+    fake_qwen_module.Qwen3TTSModel.from_pretrained.side_effect = from_pretrained
+
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+    monkeypatch.setitem(sys.modules, "qwen_tts", fake_qwen_module)
+
+    engine._ensure_loaded()
+    assert engine._device == "mps"
+
+    result = engine.synthesize("hi", voice="serena", speed=1.0, lang="Auto")
+
+    model_on_mps.generate_custom_voice.assert_called_once()
+    model_on_cpu.generate_custom_voice.assert_called_once()
+    assert engine._device == "cpu"
+    assert result.sample_rate == 24000
+    assert result.samples.shape == (3,)

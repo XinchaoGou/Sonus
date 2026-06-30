@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 enum BackendState: Equatable {
     case idle
@@ -88,7 +89,8 @@ final class BackendManager {
     }
 
     func restart(port: Int, customModelsPath: String?, activeEngine: String) async {
-        stopSpawnedProcess()
+        await stopAndAwaitExit()
+        await waitForPortFree(port: port)
         await runEmbeddedStartup(port: port, customModelsPath: customModelsPath, activeEngine: activeEngine)
     }
 
@@ -119,6 +121,13 @@ final class BackendManager {
         }
 
         updateState(.starting)
+
+        // Tear down any prior process and wait for the port to actually free
+        // before spawning. Without this, the new uvicorn can race the old one
+        // shutting down and hit `[Errno 48] address already in use` -> exit 1,
+        // which surfaces as "Backend exited unexpectedly" right after a switch.
+        await stopAndAwaitExit()
+        await waitForPortFree(port: port)
 
         do {
             try spawnBackend(port: port, modelsDirectory: modelsDirectory, activeEngine: activeEngine)
@@ -271,6 +280,73 @@ final class BackendManager {
         }
         self.process = nil
         spawnedByApp = false
+    }
+
+    /// Stop the spawned backend and block until the process has actually exited
+    /// (and the OS has had a chance to release port 8000). Escalates to SIGKILL
+    /// if a graceful SIGTERM does not land within ``timeout`` seconds.
+    ///
+    /// This is the key fix for the "switch to Qwen -> backend exits with code 1"
+    /// crash: previously we fired ``terminate()`` and immediately spawned a new
+    /// uvicorn, which raced the old one for the port and failed with
+    /// ``[Errno 48] address already in use``.
+    private func stopAndAwaitExit(timeout: TimeInterval = 6) async {
+        guard let proc = process else { return }
+        detachPipes(proc)
+        if proc.isRunning {
+            proc.terminate()
+            AppLogger.log("embedded backend terminate pid=\(proc.processIdentifier)")
+        }
+
+        await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+            let pid = proc.processIdentifier
+            DispatchQueue.global(qos: .userInitiated).async {
+                // Blocks until the process exits; bounded by the SIGKILL below.
+                proc.waitUntilExit()
+                cont.resume()
+            }
+            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + timeout) {
+                if proc.isRunning {
+                    AppLogger.log("embedded backend SIGKILL pid=\(pid) (did not exit in \(timeout)s)")
+                    kill(pid, SIGKILL)
+                }
+                // waitUntilExit above will still resume the continuation.
+            }
+        }
+
+        self.process = nil
+        self.spawnedByApp = false
+    }
+
+    /// Poll until nothing is listening on ``port`` (connection refused) or the
+    /// timeout elapses. Catches the tail of the old process releasing the port.
+    private func waitForPortFree(port: Int, timeout: TimeInterval = 5) async {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if Task.isCancelled { return }
+            if !Self.isPortOpen(port: port) { return }
+            try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+        AppLogger.log("embedded backend port \(port) still in use after \(timeout)s; spawning anyway")
+    }
+
+    private static func isPortOpen(port: Int) -> Bool {
+        let sock = socket(AF_INET, SOCK_STREAM, 0)
+        guard sock >= 0 else { return false }
+        defer { close(sock) }
+        var addr = sockaddr_in()
+        addr.sin_family = sa_family_t(AF_INET)
+        addr.sin_port = UInt16(port).bigEndian
+        addr.sin_addr.s_addr = inet_addr("127.0.0.1")
+        let result = withUnsafePointer(to: &addr) { ptr in
+            ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sa in
+                connect(sock, sa, socklen_t(MemoryLayout<sockaddr_in>.size))
+            }
+        }
+        if result == 0 {
+            return true
+        }
+        return false
     }
 
     private func detachPipes(_ process: Process) {

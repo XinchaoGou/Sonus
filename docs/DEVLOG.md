@@ -4,6 +4,43 @@
 
 ---
 
+## 2026-06-30（Qwen 切换崩溃根治 — 端口竞争 + 合成期 MPS 兜底）
+
+### Done
+
+- **根因 1（最频繁，exit code 1）**：`BackendManager.stopSpawnedProcess()` 调 `terminate()` 后**不等待进程退出**就立即 spawn 新 uvicorn，旧进程还没释放 8000 端口 → `[Errno 48] address already in use` → 进程秒退 → "Backend exited unexpectedly"。日志 14:10:08 / 14:57:47 两次命中。
+  - **修复**：新增 `stopAndAwaitExit()`（`terminate` → `waitUntilExit`，6s 超时升级 SIGKILL）+ `waitForPortFree()`（TCP 探测端口释放，5s 超时）；`restart()` / `runEmbeddedStartup()` 在 spawn 前 `await` 这两步。
+- **根因 2（合成期 MPS 崩溃）**：`Qwen3TTSEngine._ensure_loaded` 只在 `from_pretrained` 失败时回退 CPU；`generate_custom_voice` 在 MPS 上 OOM / allocator 报错时直接抛出，没有 CPU 重试。
+  - **修复**：`synthesize` 捕获 MPS 运行期异常 → `_reload_on_cpu()` 重载 CPU 重试一次；新增 `SONUS_QWEN_DEVICE` 环境变量（`cpu`/`mps`/`cuda`/`auto`）让用户一键强制 CPU 绕开 MPS 不稳定。
+- **根因 3（unload 释放不彻底）**：`unload` 只置 None + gc，未把模型移回 CPU、未 `mps.synchronize`，热切换时 MPS 显存残留。
+  - **修复**：`unload` 先 `model.to("cpu")`（best-effort）再置 None，`torch.mps.synchronize()` + `empty_cache()`；`_device` 一并复位。
+- **测试**：`tests/test_qwen_engine_stability.py` 新增合成期 MPS→CPU 回退、`SONUS_QWEN_DEVICE` 覆盖用例；两个 switch 用例 patch `_check_optional_dependency` 使其不再依赖 `qwen-tts` extra 是否安装。
+
+### Changed Files
+
+- `SonusCompanion/SonusCompanion/BackendManager.swift`
+- `src/sonus/engines/qwen3_tts.py`
+- `tests/test_qwen_engine_stability.py`
+- `docs/DEVLOG.md`
+
+### Verification
+
+- `uv run pytest`：**84 passed**
+- `xcodebuild ... build` / `test`：**BUILD SUCCEEDED** / **TEST SUCCEEDED**
+- 清理 `DerivedData/SonusCompanion-*` 与 `SonusCompanion/build`
+
+### Next
+
+- 真机回归：重新打包安装 Companion，切换 Kokoro ↔ Qwen3 多次，确认不再出现 `address already in use` 与 MPS 合成崩溃
+- 可选：`scripts/simulate-qwen-engine-switch.sh` 在本机模型就绪下再跑一遍 3 阶段
+
+### Notes
+
+- 用户当前 `/Applications/Sonus.app` 为旧版（日志显示仍在用 `PUT /engines/active` 热切换路径）；本次源码修复需重新构建安装后才生效
+- 若仍偶发 MPS 崩溃，可设 `SONUS_QWEN_DEVICE=cpu` 强制 CPU 推理（延迟上升但稳定）
+
+---
+
 ## 2026-06-30（Qwen 引擎切换稳定性）
 
 ### Done
