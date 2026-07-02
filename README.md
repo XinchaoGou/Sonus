@@ -35,7 +35,7 @@
 ## 安装
 
 ```bash
-cd /Users/wujie/Workspace/Sonus
+cd /Users/wujie/Workspace/personal/Sonus
 uv sync
 ```
 

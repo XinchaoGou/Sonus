@@ -1,3 +1,4 @@
+import AppKit
 import Carbon
 import Foundation
 
@@ -5,7 +6,9 @@ struct HotkeyConfiguration: Codable, Equatable, Sendable {
     var keyCode: UInt32
     var carbonModifiers: UInt32
 
-    static let `default` = HotkeyConfiguration(keyCode: UInt32(kVK_Escape), carbonModifiers: UInt32(optionKey))
+    static let legacyDefault = HotkeyConfiguration(keyCode: UInt32(kVK_Escape), carbonModifiers: UInt32(optionKey))
+
+    static let `default` = HotkeyConfiguration(keyCode: UInt32(kVK_Escape), carbonModifiers: UInt32(cmdKey))
 
     var displayName: String {
         var parts: [String] = []
@@ -45,6 +48,48 @@ struct HotkeyConfiguration: Codable, Equatable, Sendable {
         ]
         return map[code]
     }
+
+    /// NSEvent.keyCode from local monitors can be wrong when modifiers are held (e.g. ⌘Esc → C).
+    static func resolvedKeyCode(from event: NSEvent) -> UInt32 {
+        resolvedKeyCode(fallbackKeyCode: event.keyCode, cgEvent: event.cgEvent)
+    }
+
+    static func resolvedKeyCode(fallbackKeyCode: UInt16, cgEvent: CGEvent?) -> UInt32 {
+        if let cgEvent {
+            let code = cgEvent.getIntegerValueField(.keyboardEventKeycode)
+            return UInt32(code)
+        }
+        return UInt32(fallbackKeyCode)
+    }
+
+    static func isModifierKeyCode(_ code: UInt32) -> Bool {
+        switch Int(code) {
+        case kVK_Command, kVK_RightCommand, kVK_Shift, kVK_RightShift,
+             kVK_Option, kVK_RightOption, kVK_Control, kVK_RightControl,
+             kVK_CapsLock, kVK_Function:
+            return true
+        default:
+            return false
+        }
+    }
+
+    static func carbonModifiers(from flags: NSEvent.ModifierFlags) -> UInt32 {
+        let flags = flags.intersection(.deviceIndependentFlagsMask)
+        var result: UInt32 = 0
+        if flags.contains(.control) { result |= UInt32(controlKey) }
+        if flags.contains(.option) { result |= UInt32(optionKey) }
+        if flags.contains(.shift) { result |= UInt32(shiftKey) }
+        if flags.contains(.command) { result |= UInt32(cmdKey) }
+        return result
+    }
+
+    static func captured(from event: NSEvent) -> HotkeyConfiguration? {
+        let carbonMods = carbonModifiers(from: event.modifierFlags)
+        guard carbonMods != 0 else { return nil }
+        let keyCode = resolvedKeyCode(from: event)
+        guard !isModifierKeyCode(keyCode) else { return nil }
+        return HotkeyConfiguration(keyCode: keyCode, carbonModifiers: carbonMods)
+    }
 }
 
 private func sonusFourCharCode(_ string: String) -> FourCharCode {
@@ -62,7 +107,8 @@ final class HotkeyManager {
     private let hotKeyID = EventHotKeyID(signature: sonusFourCharCode("SNUS"), id: 1)
     var onHotkey: (() -> Void)?
 
-    func register(configuration: HotkeyConfiguration) {
+    @discardableResult
+    func register(configuration: HotkeyConfiguration) -> Bool {
         unregister()
 
         var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
@@ -109,8 +155,10 @@ final class HotkeyManager {
         if status == noErr {
             hotKeyRef = ref
             AppLogger.log("hotkey registered: \(configuration.displayName)")
+            return true
         } else {
             AppLogger.log("hotkey registration failed status=\(status)")
+            return false
         }
     }
 

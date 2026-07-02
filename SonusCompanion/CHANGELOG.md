@@ -4,6 +4,16 @@ All notable changes to Sonus Companion are documented here.
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-07-02
+
+### Fixed
+
+- **Hotkey recording captured ⌘C instead of ⌘Esc**: `NSEvent`'s local key monitor reports the wrong `keyCode` while a modifier is held (⌘Esc was seen as keyCode 8 / C). Recording now reads the true key code from the underlying `CGEvent` and ignores modifier-only presses.
+
+### Added
+
+- **Hotkey registration validation**: saving a shortcut that macOS reserves (e.g. ⌘C, which cannot be registered as a global hotkey) now rolls back to the previous shortcut and shows an inline error in Settings, instead of silently persisting an unusable combination.
+
 ## [0.5.1] - 2026-06-30
 
 ### Fixed

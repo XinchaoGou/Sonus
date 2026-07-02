@@ -68,7 +68,7 @@ CI workflow: [`.github/workflows/companion-release.yml`](../.github/workflows/co
 1. Grant **Accessibility** access when prompted  
    System Settings → Privacy & Security → Accessibility → enable **Sonus**
 2. Optional: allow notifications for error toasts
-3. Select text in any app → press **⌥Esc** or use menu **Speak Selection**
+3. Select text in any app → press **⌘Esc** or use menu **Speak Selection**
 
 ## Settings
 
@@ -77,7 +77,7 @@ CI workflow: [`.github/workflows/companion-release.yml`](../.github/workflows/co
 | Server URL | `http://127.0.0.1:8000` |
 | Voice | `zh_female` |
 | Speed | 1.0× |
-| Hotkey | ⌥Esc |
+| Hotkey | ⌘Esc |
 | Clipboard fallback | On |
 | Local cache | On |
 | Launch at Login | Off (enable in Settings → System) |

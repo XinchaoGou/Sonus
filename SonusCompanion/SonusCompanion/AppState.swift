@@ -121,6 +121,14 @@ enum AppSettings {
         }
     }
 
+    /// Users who never customized hotkey still have legacy ⌥Esc persisted in UserDefaults.
+    static func migrateHotkeyFromLegacyDefaultIfNeeded() {
+        guard UserDefaults.standard.data(forKey: hotkeyConfigKey) != nil else { return }
+        let config = hotkeyConfiguration
+        guard config == HotkeyConfiguration.legacyDefault else { return }
+        hotkeyConfiguration = .default
+    }
+
     static var cachedVoices: [Voice] {
         get {
             guard let data = UserDefaults.standard.data(forKey: cachedVoicesKey),
@@ -193,11 +201,16 @@ final class AppState {
             self?.backendState = state
             self?.backendStatusMessage = state.displayName
         }
+        AppSettings.migrateHotkeyFromLegacyDefaultIfNeeded()
+        hotkeyConfiguration = AppSettings.hotkeyConfiguration
+        registerHotkey()
     }
 
     func startup() {
         AppLogger.log("app start")
         migrateStoredEngineIfNeeded()
+        AppSettings.migrateHotkeyFromLegacyDefaultIfNeeded()
+        hotkeyConfiguration = AppSettings.hotkeyConfiguration
         registerHotkey()
         Task { await startBackendAndRefreshVoices() }
     }
@@ -261,18 +274,26 @@ final class AppState {
         }
     }
 
-    func registerHotkey() {
+    @discardableResult
+    func registerHotkey() -> Bool {
         hotkeyManager.onHotkey = { [weak self] in
             AppLogger.log("hotkey triggered")
             self?.handleHotkey()
         }
-        hotkeyManager.register(configuration: hotkeyConfiguration)
+        return hotkeyManager.register(configuration: hotkeyConfiguration)
     }
 
-    func updateHotkey(_ config: HotkeyConfiguration) {
+    @discardableResult
+    func updateHotkey(_ config: HotkeyConfiguration) -> Bool {
+        let previous = hotkeyConfiguration
         hotkeyConfiguration = config
-        AppSettings.hotkeyConfiguration = config
+        if registerHotkey() {
+            AppSettings.hotkeyConfiguration = config
+            return true
+        }
+        hotkeyConfiguration = previous
         registerHotkey()
+        return false
     }
 
     func handleHotkey() {

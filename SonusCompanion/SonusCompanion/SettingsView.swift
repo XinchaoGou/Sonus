@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var showTextRulesSettings = false
     @State private var isRecordingHotkey = false
     @State private var hotkeyMonitor: Any?
+    @State private var hotkeyMessage: String?
 
     var body: some View {
         Form {
@@ -140,9 +141,15 @@ struct SettingsView: View {
                         toggleHotkeyRecording()
                     }
                 }
-                Text("Default: ⌥Esc. Requires a modifier key.")
+                Text("Default: ⌘Esc. Requires a modifier key.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                if let hotkeyMessage {
+                    Text(hotkeyMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .lineLimit(2)
+                }
             }
 
             Section("Text Capture") {
@@ -327,13 +334,15 @@ struct SettingsView: View {
 
     private func startHotkeyRecording() {
         isRecordingHotkey = true
+        hotkeyMessage = nil
         hotkeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             guard isRecordingHotkey else { return event }
-            let carbonMods = carbonModifiers(from: event.modifierFlags)
-            guard carbonMods != 0 else { return nil }
-            let config = HotkeyConfiguration(keyCode: UInt32(event.keyCode), carbonModifiers: carbonMods)
-            appState.updateHotkey(config)
-            stopHotkeyRecording()
+            guard let config = HotkeyConfiguration.captured(from: event) else { return nil }
+            if appState.updateHotkey(config) {
+                stopHotkeyRecording()
+            } else {
+                hotkeyMessage = "Could not register this shortcut. It may be reserved by macOS."
+            }
             return nil
         }
     }
@@ -344,15 +353,6 @@ struct SettingsView: View {
             NSEvent.removeMonitor(hotkeyMonitor)
             self.hotkeyMonitor = nil
         }
-    }
-
-    private func carbonModifiers(from flags: NSEvent.ModifierFlags) -> UInt32 {
-        var result: UInt32 = 0
-        if flags.contains(.control) { result |= UInt32(controlKey) }
-        if flags.contains(.option) { result |= UInt32(optionKey) }
-        if flags.contains(.shift) { result |= UInt32(shiftKey) }
-        if flags.contains(.command) { result |= UInt32(cmdKey) }
-        return result
     }
 
     private var backendStatusLabel: some View {

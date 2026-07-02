@@ -4,6 +4,47 @@
 
 ---
 
+## 2026-07-02（修复 Settings 热键录制 ⌘Esc 误识别为 ⌘C）
+
+### Done
+
+- **根因**：`NSEvent.addLocalMonitorForEvents` 在按住修饰键时 `event.keyCode` 可能错误（⌘Esc 被报成 keyCode 8 / C）
+- **修复**：录制时改用 `CGEvent.getIntegerValueField(.keyboardEventKeycode)` 读取真实键码；忽略纯修饰键按下
+- **注册校验**：`updateHotkey` 注册失败时回滚并提示；⌘C 等系统保留组合无法注册（Carbon 返回失败）
+- **测试**：新增 30+ 用例（捕获逻辑、Carbon 注册、UserDefaults 迁移、AppState 回滚）
+
+### Changed Files
+
+- `SonusCompanion/SonusCompanion/HotkeyManager.swift`
+- `SonusCompanion/SonusCompanion/AppState.swift`
+- `SonusCompanion/SonusCompanion/SettingsView.swift`
+- `SonusCompanion/SonusCompanionTests/HotkeyConfigurationTests.swift`
+- `SonusCompanion/SonusCompanionTests/HotkeyManagerTests.swift`
+- `SonusCompanion/SonusCompanionTests/AppSettingsHotkeyTests.swift`
+- `SonusCompanion/SonusCompanionTests/AppStateHotkeyTests.swift`
+- `SonusCompanion/SonusCompanion.xcodeproj/project.pbxproj`
+- `docs/DEVLOG.md`
+
+---
+
+## 2026-07-02（Companion 热键默认改为 ⌘Esc + 启动即注册）
+
+### Done
+
+- **默认热键**：⌥Esc → **⌘Esc**（`HotkeyConfiguration.default` 使用 `cmdKey`）
+- **启动即注册**：`AppState.init()` 中注册全局热键；修复 MenuBarExtra 菜单未展开前热键不生效的问题
+- **迁移**：UserDefaults 仍为旧默认 ⌥Esc 时自动迁移到 ⌘Esc
+- **录制修正**：Settings 热键录制使用 `deviceIndependentFlagsMask`，避免多余 modifier 位导致注册失败
+
+### Changed Files
+
+- `SonusCompanion/SonusCompanion/HotkeyManager.swift`
+- `SonusCompanion/SonusCompanion/AppState.swift`
+- `SonusCompanion/SonusCompanion/SettingsView.swift`
+- `SonusCompanion/README.md`、`docs/COMPANION.md`、`docs/DEVLOG.md`
+
+---
+
 ## 2026-06-30（修复 v0.5.0 升级后 activeEngine 残留 qwen3-tts 导致启动崩溃）
 
 ### Done

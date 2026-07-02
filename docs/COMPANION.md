@@ -147,7 +147,7 @@ uv run sonus serve
 curl -sS http://127.0.0.1:8000/health
 ```
 
-Xcode Debug 构建默认 **Use external Sonus server**（Settings → Advanced）。在 Safari / Preview 选中文本，按 **⌥Esc**。
+Xcode Debug 构建默认 **Use external Sonus server**（Settings → Advanced）。在 Safari / Preview 选中文本，按 **⌘Esc**。
 
 ## 后续
 

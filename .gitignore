@@ -23,3 +23,7 @@ models/*.bin
 DerivedData/
 *.xcuserstate
 xcuserdata/
+
+# macOS / coverage cruft
+.DS_Store
+*.profraw

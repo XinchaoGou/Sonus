@@ -39,6 +39,10 @@
 		B10000000000000000000002 /* TextRuleStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* TextRuleStoreTests.swift */; };
 		B10000000000000000000003 /* AppVersionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000003 /* AppVersionTests.swift */; };
 		B10000000000000000000004 /* ModelManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000004 /* ModelManagerTests.swift */; };
+		B10000000000000000000005 /* HotkeyConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000005 /* HotkeyConfigurationTests.swift */; };
+		B10000000000000000000006 /* HotkeyManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000006 /* HotkeyManagerTests.swift */; };
+		B10000000000000000000007 /* AppSettingsHotkeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000007 /* AppSettingsHotkeyTests.swift */; };
+		B10000000000000000000008 /* AppStateHotkeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000008 /* AppStateHotkeyTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -76,6 +80,10 @@
 		B20000000000000000000002 /* TextRuleStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRuleStoreTests.swift; sourceTree = "<group>"; };
 		B20000000000000000000003 /* AppVersionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppVersionTests.swift; sourceTree = "<group>"; };
 		B20000000000000000000004 /* ModelManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelManagerTests.swift; sourceTree = "<group>"; };
+		B20000000000000000000005 /* HotkeyConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyConfigurationTests.swift; sourceTree = "<group>"; };
+		B20000000000000000000006 /* HotkeyManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManagerTests.swift; sourceTree = "<group>"; };
+		B20000000000000000000007 /* AppSettingsHotkeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsHotkeyTests.swift; sourceTree = "<group>"; };
+		B20000000000000000000008 /* AppStateHotkeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStateHotkeyTests.swift; sourceTree = "<group>"; };
 		B30000000000000000000001 /* SonusCompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SonusCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -187,6 +195,10 @@
 				B20000000000000000000002 /* TextRuleStoreTests.swift */,
 				B20000000000000000000003 /* AppVersionTests.swift */,
 				B20000000000000000000004 /* ModelManagerTests.swift */,
+				B20000000000000000000005 /* HotkeyConfigurationTests.swift */,
+				B20000000000000000000006 /* HotkeyManagerTests.swift */,
+				B20000000000000000000007 /* AppSettingsHotkeyTests.swift */,
+				B20000000000000000000008 /* AppStateHotkeyTests.swift */,
 			);
 			path = SonusCompanionTests;
 			sourceTree = "<group>";
@@ -320,6 +332,10 @@
 				B10000000000000000000002 /* TextRuleStoreTests.swift in Sources */,
 				B10000000000000000000003 /* AppVersionTests.swift in Sources */,
 				B10000000000000000000004 /* ModelManagerTests.swift in Sources */,
+				B10000000000000000000005 /* HotkeyConfigurationTests.swift in Sources */,
+				B10000000000000000000006 /* HotkeyManagerTests.swift in Sources */,
+				B10000000000000000000007 /* AppSettingsHotkeyTests.swift in Sources */,
+				B10000000000000000000008 /* AppStateHotkeyTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -377,7 +393,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.5.1;
+				MARKETING_VERSION = 0.5.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sonus.app;
 				PRODUCT_NAME = Sonus;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -402,7 +418,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.5.1;
+				MARKETING_VERSION = 0.5.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sonus.app;
 				PRODUCT_NAME = Sonus;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -423,7 +439,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.5.1;
+				MARKETING_VERSION = 0.5.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sonus.app.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -444,7 +460,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.5.1;
+				MARKETING_VERSION = 0.5.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sonus.app.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
